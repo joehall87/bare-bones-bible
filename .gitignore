@@ -1,0 +1,4 @@
+# Python
+env
+*.pyc
+__pycache__
