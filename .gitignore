@@ -2,3 +2,7 @@
 env
 *.pyc
 __pycache__
+
+# Resources
+models
+resources

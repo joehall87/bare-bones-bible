@@ -1,8 +1,8 @@
-import bibleapp
+import testapp
 import config
 
 
-app = bibleapp.create_app(config)
+app = testapp.create_app(config)
 
 
 # This is only used when running locally. When running live, gunicorn runs
