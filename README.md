@@ -13,6 +13,6 @@ pip install  -r requirements.txt
 python main.py
 ```
 
-Tanach resources can be downloaded from: https://tanach.us/Tanach.zip...currently only utilising the Books dir with all the xmls.
+Tanach resources can be downloaded from: http://www.tanach.us/TextFiles/Tanach.acc.txt.zip...currently only utilising the raw \*.acc.txt files.
 
 **Note:** It seems that `dev_appserver.py app.yaml` does not work with python3...so stick to `python main.py`.
