@@ -1,11 +1,14 @@
-import testapp
-import config
+from flask import Flask, render_template, request
 
+app = Flask(__name__)
 
-app = testapp.create_app(config)
+@app.route('/tanach')
+def tanach():
+    """Show Tanach"""
+    return render_template('tanach.html', verses=[{'v': '1', 'text': 'testing testing 123'}])
 
-
-# This is only used when running locally. When running live, gunicorn runs
-# the application.
 if __name__ == '__main__':
+    # This is used when running locally only. When deploying to Google App
+    # Engine, a webserver process such as Gunicorn will serve the app. This
+    # can be configured by adding an `entrypoint` to app.yaml.
     app.run(host='127.0.0.1', port=8080, debug=True)
