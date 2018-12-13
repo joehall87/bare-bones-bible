@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/bible-app.iml" filepath="$PROJECT_DIR$/bible-app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/bibleapp/bibleapp.iml" filepath="$PROJECT_DIR$/bibleapp/bibleapp.iml" />
     </modules>
   </component>
 </project>
