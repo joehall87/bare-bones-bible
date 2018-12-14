@@ -6,28 +6,77 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+  <style type="text/css">
+    .dropdown-menu {
+      min-width: 200px;
+    }
+    .dropdown-menu.columns-2 {
+      min-width: 400px;
+    }
+    .dropdown-menu.columns-3 {
+      min-width: 600px;
+    }
+    .dropdown-menu.columns-4 {
+      min-width: 800px;
+    }
+    .dropdown-menu li a {
+      padding: 5px 15px;
+      font-weight: 300;
+    }
+    .multi-column-dropdown {
+      list-style: none;
+      margin: 0px;
+      padding: 0px;
+    }
+    .multi-column-dropdown li a {
+      display: block;
+      clear: both;
+      color: #333;
+      white-space: normal;
+    }
+    .multi-column-dropdown li a:hover {
+      text-decoration: none;
+      color: #262626;
+      background-color: #999;
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <!-- Brand -->
     <span class="navbar-brand mb-0 h1">Tanakh Miner</span>
+
+    <!-- Collapse button -->
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
+    <!-- Collapsible content -->
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav mr-auto">
+        <!-- Home -->
         <li class="nav-item active">
           <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
         </li>
+        <!-- Books -->
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="booksDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Books</a>
-          <div class="dropdown-menu" aria-labelledby="booksDropdown">
-            {% for tag, dtype, name, attrs in dropdown %}
-            <{{tag}} class="dropdown-{{dtype}}" {{attrs}}>{{name}}</{{tag}}>
-            {% endfor %}
-          </div>
+            <a class="nav-link dropdown-toggle" href="#" id="booksDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Books</a>
+            <ul class="dropdown-menu multi-column columns-4" aria-labelledby="booksDropdown">
+              <div class="row">
+                {% for i in [0, 11, 22, 33] %}
+                <div class="col-md-3">
+                  <ul class="multi-column-dropdown">
+                    {% for tag, dtype, name, attrs in dropdown[i:i+11] %}
+                    <li><{{tag}} class="dropdown-{{dtype}}" {{attrs}}>{{name}}</{{tag}}></li>
+                    {% endfor %}
+                  </ul>
+                </div>
+                {% endfor %}
+              </div>
+            </ul>
         </li>
       </ul>
+      <!-- Searching -->
       <form class="form-inline my-2 my-lg-0">
         <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
         <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
