@@ -3,6 +3,8 @@ import re
 
 from flask import Flask, render_template, request
 
+from bibleapp.book import Book
+
 
 app = Flask(__name__)
 
@@ -10,42 +12,52 @@ app = Flask(__name__)
 RESOURCES_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'resources')
 
 
-class Book(object):
-    def __init__(self, name, code):
-        self.name = name
-        self.code = code
-
 torah = [
-    Book('Genesis', 'gen'),
-    Book('Exodus', 'exo'),
-    Book('Leviticus', 'lev'),
-    Book('Numbers', 'num'),
-    Book('Deuteronomy', 'deu'),
+    Book('Genesis'),
+    Book('Exodus'),
+    Book('Leviticus'),
+    Book('Numbers'),
+    Book('Deuteronomy'),
 ]
 
 neviim = [
-    Book('Joshua', 'jos'),
-    Book('Judges', 'jud'),
-    Book('Samuel', 'sam'),
-    Book('Kings', 'kin'),
-    Book('Isaiah', 'isa'),
-    Book('Jeremiah', 'jer'),
-    Book('Ezekial', 'eze'),
-    Book('The Twelve', 't12'),  # TODO Fix
+    Book('Joshua'),
+    Book('Judges'),
+    Book('1 Samuel'),
+    Book('2 Samuel'),
+    Book('1 Kings'),
+    Book('2 Kings'),
+    Book('Isaiah'),
+    Book('Jeremiah'),
+    Book('Ezekial'),
+    Book('Hosea'),
+    Book('Joel'),
+    Book('Amos'),
+    Book('Obadiah'),
+    Book('Jonah'),
+    Book('Micah'),
+    Book('Nahum'),
+    Book('Habakkuk'),
+    Book('Zephaniah'),
+    Book('Haggai'),
+    Book('Zechariah'),
+    Book('Malachi'),
 ]
 
 ketuvim = [
-    Book('Psalms', 'psa'),
-    Book('Proverbs', 'pro'),
-    Book('Job', 'job'),
-    Book('Song of Songs', 'son'),
-    Book('Ruth', 'rut'),
-    Book('Lamentations', 'lam'),
-    Book('Ecclesiastes', 'ecc'),
-    Book('Esther', 'est'),
-    Book('Daniel', 'dan'),
-    Book('Ezra-Nehemiah', 'ezr'),
-    Book('Chronicles', 'chr'),
+    Book('Psalms'),
+    Book('Proverbs'),
+    Book('Job'),
+    Book('Song of Songs'),
+    Book('Ruth'),
+    Book('Lamentations'),
+    Book('Ecclesiastes'),
+    Book('Esther'),
+    Book('Daniel'),
+    Book('Ezra'),
+    Book('Nehemiah'),
+    Book('1 Chronicles'),
+    Book('2 Chronicles'),
 ]
 
 
@@ -56,7 +68,12 @@ def root():
     #with open(gen, 'r') as f:
     #    lines = (line.replace('\u202a', '').replace('\u202b', '').replace('\u202c', '').strip() for line in f.readlines())
     #    verses = [_parse_line(line) for line in lines if not line.startswith('xxxx')]
-    return render_template('home.html', torah=torah, neviim=neviim, ketuvim=ketuvim)
+    dropdown = (
+        [('h6', 'header', 'Torah',   '')] + [('a', 'item', book.name, 'href="#"') for book in torah] + [('div', 'divider', '', '')] +
+        [('h6', 'header', 'Neviim',  '')] + [('a', 'item', book.name, 'href="#"') for book in neviim] + [('div', 'divider', '', '')] +
+        [('h6', 'header', 'Ketuvim', '')] + [('a', 'item', book.name, 'href="#"') for book in ketuvim]
+    )
+    return render_template('home.html', dropdown=dropdown)
 
 
 def _parse_line(line):
