@@ -1,7 +1,7 @@
 import os.path
 import re
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, redirect, request, url_for
 
 from bibleapp.book import Book
 
@@ -58,20 +58,68 @@ ketuvim = [
 ]
 
 dropdown = (
-    [('h5', 'header', 'Torah',   '')] + [('a', 'item', book.name, 'href=/?book={}'.format(book.code)) for book in torah] + [('div', 'divider', '', '')] +
-    [('h5', 'header', 'Neviim',  '')] + [('a', 'item', book.name, 'href=/?book={}'.format(book.code)) for book in neviim] + [('div', 'divider', '', '')] +
-    [('h5', 'header', 'Ketuvim', '')] + [('a', 'item', book.name, 'href=/?book={}'.format(book.code)) for book in ketuvim]
+    [('h5', 'header', 'Torah',   '')] + [('a', 'item', book.name, 'href=/book?book={}'.format(book.code)) for book in torah] + [('div', 'divider', '', '')] +
+    [('h5', 'header', 'Neviim',  '')] + [('a', 'item', book.name, 'href=/book?book={}'.format(book.code)) for book in neviim] + [('div', 'divider', '', '')] +
+    [('h5', 'header', 'Ketuvim', '')] + [('a', 'item', book.name, 'href=/book?book={}'.format(book.code)) for book in ketuvim]
 )
 
 
 @app.route('/')
 def root():
-    """Show Tanakh"""
-    book = None
-    code = request.args.get('book')
-    if code:
-        book = [book for books in [torah, neviim, ketuvim] for book in books if book.code == code][0]
-    return render_template('home.html', dropdown=dropdown, book=book)
+    """Redirect to home."""
+    return redirect(url_for('home'))
+
+
+@app.route('/home')
+def home():
+    """Home page."""
+    return render_template('home.html', page='home', dropdown=dropdown)
+
+
+@app.route('/book')
+def book():
+    """Show book."""
+    code = request.args['book']
+    book = [book for books in [torah, neviim, ketuvim] for book in books if book.code == code][0]
+    start, end = None, None
+    if 'chapter' in request.args:
+        c = int(request.args['chapter'])
+        start, end = (c, 0), (c, 999)
+    return render_template('home.html', page='book', dropdown=dropdown, book=book, start=start, end=end)
+
+
+@app.route('/search')
+def search():
+    """Search for a range of text."""
+    text = request.args['text'].strip()
+    match = re.match('^(\d?\w+)\s*(\d+):(\d+)\s*-\s*(\d+):(\d+)$', text)  # Case 1: "book c1:v1 - c2:v2"
+    if match:
+        code  = match.group(1)
+        start = int(match.group(2)), int(match.group(3))
+        end   = int(match.group(4)), int(match.group(5))
+    match = re.match('^(\d?\w+)\s*(\d+):(\d+)\s*-\s*(\d+)$', text)        # Case 2: "book c1:v1 - v2"
+    if match:
+        code  = match.group(1)
+        start = int(match.group(2)), int(match.group(3))
+        end   = int(match.group(2)), int(match.group(4))
+    match = re.match('^(\d?\w+)\s*(\d+):(\d+)$', text)                    # Case 3: "book c1:v1"
+    if match:
+        code  = match.group(1)
+        start = int(match.group(2)), int(match.group(3))
+        end   = start
+    match = re.match('^(\d?\w+)\s*(\d+)$', text)                          # Case 4: "book c1"
+    if match:
+        code  = match.group(1)
+        start = int(match.group(2)), 0
+        end   = int(match.group(2)), 999
+    match = re.match('^(\d?\w+)\s*(\d+)\s*-\s*(\d+)$', text)              # Case 5: "book c1 - c2"
+    if match:
+        code  = match.group(1)
+        start = int(match.group(2)), 0
+        end   = int(match.group(3)), 999
+    print(start, end)
+    book = [book for books in [torah, neviim, ketuvim] for book in books if book.code == code][0]
+    return render_template('home.html', page='book', dropdown=dropdown, book=book, start=start, end=end)
 
 
 if __name__ == '__main__':

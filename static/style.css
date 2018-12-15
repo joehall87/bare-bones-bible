@@ -1,45 +1,50 @@
-/* Hebrew display styles */
-.chapter {
-  font-size: 150%;	
+/* Jumbotron */
+.jumbotron {
+  text-align: center;
+  padding-top: 10rem;
+  padding-bottom: 10rem;
+  opacity: 1.0;
 }
-a.word {
+.bg-cover {
+  background-size: cover;
+  color: white;
+  background-position: center center;
+  position: relative;
+  z-index: -2;
+}
+.overlay {
+  background-color: #000;
+  opacity: 0.5;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  z-index: -1;
+}
+.bg-cover {
+    background-image: url('/static/dead-sea1.jpg');
+}
+/* Fixed navbar */
+body {
+  min-height: 75rem;
+  padding-top: 3rem;
+}
+.scrollable-menu {
+  height: auto;
+  max-height: 600px;
+  overflow-x: hidden;
+}
+/* Word highlighting */
+.word-highlighting a {
   color: black;
-  font-size: 120%;
+  font-size: 140%;
   text-decoration: none;
 }
-a.word:hover {
-  text-shadow: 0 0 2px #FF0000;
+.word-highlighting a:hover {
+  text-shadow: 2px 2px 10px #00FF00;
+  /*background: #FFFF00;*/
 }
-/* Bootstrap styles */
-.dropdown-menu {
-  min-width: 200px;
-}
-.dropdown-menu.columns-2 {
-  min-width: 400px;
-}
-.dropdown-menu.columns-3 {
-  min-width: 600px;
-}
-.dropdown-menu.columns-4 {
-  min-width: 800px;
-}
-.dropdown-menu li a {
-  padding: 5px 15px;
-  font-weight: 300;
-}
-.multi-column-dropdown {
-  list-style: none;
-  margin: 0px;
-  padding: 0px;
-}
-.multi-column-dropdown li a {
-  display: block;
-  clear: both;
-  color: #333;
-  white-space: normal;
-}
-.multi-column-dropdown li a:hover {
-  text-decoration: none;
-  color: #262626;
-  background-color: #999;
+.chapter-button {
+  width: 60px;
 }
