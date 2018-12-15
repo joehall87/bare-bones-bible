@@ -1,3 +1,45 @@
-.pagetitle {
-    color: #800080;
+/* Hebrew display styles */
+.chapter {
+  font-size: 150%;	
+}
+a.word {
+  color: black;
+  font-size: 120%;
+  text-decoration: none;
+}
+a.word:hover {
+  text-shadow: 0 0 2px #FF0000;
+}
+/* Bootstrap styles */
+.dropdown-menu {
+  min-width: 200px;
+}
+.dropdown-menu.columns-2 {
+  min-width: 400px;
+}
+.dropdown-menu.columns-3 {
+  min-width: 600px;
+}
+.dropdown-menu.columns-4 {
+  min-width: 800px;
+}
+.dropdown-menu li a {
+  padding: 5px 15px;
+  font-weight: 300;
+}
+.multi-column-dropdown {
+  list-style: none;
+  margin: 0px;
+  padding: 0px;
+}
+.multi-column-dropdown li a {
+  display: block;
+  clear: both;
+  color: #333;
+  white-space: normal;
+}
+.multi-column-dropdown li a:hover {
+  text-decoration: none;
+  color: #262626;
+  background-color: #999;
 }

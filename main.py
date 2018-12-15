@@ -9,9 +9,6 @@ from bibleapp.book import Book
 app = Flask(__name__)
 
 
-RESOURCES_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'resources')
-
-
 torah = [
     Book('Genesis'),
     Book('Exodus'),
@@ -29,7 +26,7 @@ neviim = [
     Book('2 Kings'),
     Book('Isaiah'),
     Book('Jeremiah'),
-    Book('Ezekial'),
+    Book('Ezekiel'),
     Book('Hosea'),
     Book('Joel'),
     Book('Amos'),
@@ -60,25 +57,21 @@ ketuvim = [
     Book('2 Chronicles'),
 ]
 
+dropdown = (
+    [('h5', 'header', 'Torah',   '')] + [('a', 'item', book.name, 'href=/?book={}'.format(book.code)) for book in torah] + [('div', 'divider', '', '')] +
+    [('h5', 'header', 'Neviim',  '')] + [('a', 'item', book.name, 'href=/?book={}'.format(book.code)) for book in neviim] + [('div', 'divider', '', '')] +
+    [('h5', 'header', 'Ketuvim', '')] + [('a', 'item', book.name, 'href=/?book={}'.format(book.code)) for book in ketuvim]
+)
+
 
 @app.route('/')
 def root():
     """Show Tanakh"""
-    #gen = os.path.join(RESOURCES_DIR, 'Books', 'Genesis.acc.txt')
-    #with open(gen, 'r') as f:
-    #    lines = (line.replace('\u202a', '').replace('\u202b', '').replace('\u202c', '').strip() for line in f.readlines())
-    #    verses = [_parse_line(line) for line in lines if not line.startswith('xxxx')]
-    dropdown = (
-        [('h6', 'header', 'Torah',   '')] + [('a', 'item', book.name, 'href="#"') for book in torah] + [('div', 'divider', '', '')] +
-        [('h6', 'header', 'Neviim',  '')] + [('a', 'item', book.name, 'href="#"') for book in neviim] + [('div', 'divider', '', '')] +
-        [('h6', 'header', 'Ketuvim', '')] + [('a', 'item', book.name, 'href="#"') for book in ketuvim]
-    )
-    return render_template('home.html', dropdown=dropdown)
-
-
-def _parse_line(line):
-    match = re.search('(\d+)\s*\u05C3(\d+)\s*(.*)', line)
-    return {'c': match.group(2), 'v': match.group(1), 'text': match.group(3)}
+    book = None
+    code = request.args.get('book')
+    if code:
+        book = [book for books in [torah, neviim, ketuvim] for book in books if book.code == code][0]
+    return render_template('home.html', dropdown=dropdown, book=book)
 
 
 if __name__ == '__main__':
