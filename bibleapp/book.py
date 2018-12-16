@@ -1,13 +1,7 @@
+import json
 import os
 import os.path
 import re
-
-
-class Token(object):
-	"""Token wrapper."""
-	def __init__(self, word, space):
-		self.word = word
-		self.space = space
 
 
 class Book(object):
@@ -16,52 +10,53 @@ class Book(object):
 
 	def __init__(self, name):
 		self.name = name
-		self.file = '{}_{}'.format(name[2:], name[0]) if name[0].isdigit() else name.replace(' ', '_')
 		self.code = name.replace(' ', '').lower()[:4 if name[0].isdigit() else 3]
-		self.content = self._init_content()
+		self.he_content = self._init_he_content()
 
 	@property
 	def num_chapters(self):
 		"""Num chapters in book."""
-		return self.content[-1][0]
+		return self.he_content[-1][0]
 
-	def iter_content(self, start=None, end=None):
-		"""Iterate over content"""
-		start = start or (0,0)
-		end = end or (999,999)
-		chapter, content = 0, []
-		for c, v, tokens in self.content:
-			if start <= (c, v) <= end:
+	def iter_verses_by_chapter(self, cv_start=None, cv_end=None):
+		"""Iterate over verses"""
+		cv_start = cv_start or (0,0)
+		cv_end = cv_end or (999,999)
+		chapter, verses = 0, []
+		for c, verse in self.he_content:
+			if cv_start <= (c, verse.num) <= cv_end:
 				if c != chapter:
-					if content:
-						yield chapter, content
-					chapter, content = c, []
-				content.append((v, tokens))
-		if content:
-			yield chapter, content
+					if verses:
+						yield chapter, verses
+					chapter, verses = c, []
+				verses.append(verse)
+		if verses:
+			yield chapter, verses
 
-	def iter_tokens(self, start=None, end=None):
-		"""Iterate over content"""
+	def iter_tokens(self, cv_start=None, cv_end=None):
+		"""Iterate over unique tokens."""
 		used = set()
-		for chapter, content in self.iter_content(start, end):
-			for v, tokens in content:
-				for token in tokens:
+		for chapter, verses in self.iter_verses_by_chapter(cv_start, cv_end):
+			for verse in verses:
+				for token in verse.tokens:
 					if token.word not in used:
 						yield token
 						used.add(token.word)
 
-	def _init_content(self):
-		path = os.path.join(self._RESOURCES_DIR, 'books', '{}.acc.txt'.format(self.file))
+	def _init_he_content(self):
+		content = []
+		path = os.path.join(self._RESOURCES_DIR, 'sefaria', '{}.he.json'.format(self.name))
 		with open(path, 'r') as f:
-			lines = (line.replace('\u202a', '').replace('\u202b', '').replace('\u202c', '').strip() for line in f.readlines())
-			return [self._parse_line(line) for line in lines if not line.startswith('xxxx')]
+			blob = json.load(f)
+			for c, verses in enumerate(blob['text'], start=1):
+				for v, verse in enumerate(verses, start=1):
+					content.append((c, self._parse_he_verse(v, verse)))
+		return content
 
 	@staticmethod
-	def _parse_line(line):
-		# Returns tuple of (chapter, verse, word_list)
-		match = re.search('(\d+)\s*\u05C3(\d+)\s*(.*)', line)
+	def _parse_he_verse(v, verse):
 		tokens = []
-		for word in re.sub('[^\u0590-\u05FF ]', '', match.group(3)).split():  # Retain only Hebrew-unicode
+		for word in verse.split():
 			space = ' '
 			if word == '\u05C0':
 				tokens[-1].space += '\u05C0 '
@@ -73,4 +68,18 @@ class Book(object):
 				tokens.extend([Token(part, '\u05BE') for part in parts[:-1]] + [Token(parts[-1], space)])
 			else:
 				tokens.append(Token(word, space))
-		return int(match.group(2)), int(match.group(1)), tokens
+		return Verse(v, tokens)
+
+
+class Verse(object):
+	"""Verse wrapper."""
+	def __init__(self, num, tokens):
+		self.num = num
+		self.tokens = tokens
+
+
+class Token(object):
+	"""Token wrapper."""
+	def __init__(self, word, space=None):
+		self.word = word
+		self.space = space

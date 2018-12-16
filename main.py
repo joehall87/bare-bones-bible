@@ -85,7 +85,7 @@ def book():
     if 'chapter' in request.args:
         c = int(request.args['chapter'])
         start, end = (c, 0), (c, 999)
-    return render_template('home.html', page='book', dropdown=dropdown, book=book, start=start, end=end)
+    return render_template('home.html', page='book', dropdown=dropdown, book=book, cv_start=start, cv_end=end)
 
 
 @app.route('/search')
@@ -119,7 +119,7 @@ def search():
         end   = int(match.group(3)), 999
     print(start, end)
     book = [book for books in [torah, neviim, ketuvim] for book in books if book.code == code][0]
-    return render_template('home.html', page='book', dropdown=dropdown, book=book, start=start, end=end)
+    return render_template('home.html', page='book', dropdown=dropdown, book=book, cv_start=start, cv_end=end)
 
 
 if __name__ == '__main__':

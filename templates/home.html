@@ -68,23 +68,23 @@
   {% elif page == 'book' %}
   <main role="main" class="container">
     <h1 class="mt-5">{{book.name}}</h1>
-    {% if not start %}
-      {% for c in range(1, book.num_chapters + 1) %}<a href="book?book={{book.code}}&chapter={{c}}" role="button" class="btn btn-outline-dark chapter-button">{{c}}</a>{% endfor %}
+    {% if not cv_start %}
+      {% for chapter in range(1, book.num_chapters + 1) %}<a href="book?book={{book.code}}&chapter={{chapter}}" role="button" class="btn btn-outline-dark chapter-button">{{chapter}}</a>{% endfor %}
     {% else %}
-      {% for c, content in book.iter_content(start, end) %}
-      <h3 class="mx-auto">Chapter {{c}}</h3><hr/>
+      {% for chapter, verses in book.iter_verses_by_chapter(cv_start, cv_end) %}
+      <h3 class="mx-auto">Chapter {{chapter}}</h3><hr/>
       <div class="text-right">
         <bdo dir=rtl>
           <p class="word-highlighting">
-            {% for v, tokens in content %}
-            <strong>{{v}}</strong> 
-            {% for token in tokens %}<a href="#" data-toggle="modal" data-target="#{{token.word}}">{{token.word}}</a>{{token.space}}{% endfor %}<br>
+            {% for verse in verses %}
+            <strong>{{verse.num}}</strong> 
+            {% for token in verse.tokens %}<a href="#" data-toggle="modal" data-target="#{{token.word}}">{{token.word}}</a>{{token.space}}{% endfor %}<br>
             {% endfor %}
           </p>
         </bdo>
       </div>
       {% endfor %}
-      {% for token in book.iter_tokens(start, end) %}
+      {% for token in book.iter_tokens(cv_start, cv_end) %}
       <div class="modal fade" id="{{token.word}}" tabindex="-1" role="dialog" aria-labelledby="{{token.word}}-label" aria-hidden="true">
         <div class="modal-dialog" role="document">
           <div class="modal-content">
