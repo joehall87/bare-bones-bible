@@ -41,27 +41,27 @@ def search():
     text = request.args['text'].strip()
     match = re.match('^(\d?\w+)\s*(\d+):(\d+)\s*-\s*(\d+):(\d+)$', text)  # Case 1: "book c1:v1 - c2:v2"
     if match:
-        code  = match.group(1)
+        code  = match.group(1).lower()
         start = int(match.group(2)), int(match.group(3))
         end   = int(match.group(4)), int(match.group(5))
     match = re.match('^(\d?\w+)\s*(\d+):(\d+)\s*-\s*(\d+)$', text)        # Case 2: "book c1:v1 - v2"
     if match:
-        code  = match.group(1)
+        code  = match.group(1).lower()
         start = int(match.group(2)), int(match.group(3))
         end   = int(match.group(2)), int(match.group(4))
     match = re.match('^(\d?\w+)\s*(\d+):(\d+)$', text)                    # Case 3: "book c1:v1"
     if match:
-        code  = match.group(1)
+        code  = match.group(1).lower()
         start = int(match.group(2)), int(match.group(3))
         end   = start
     match = re.match('^(\d?\w+)\s*(\d+)$', text)                          # Case 4: "book c1"
     if match:
-        code  = match.group(1)
+        code  = match.group(1).lower()
         start = int(match.group(2)), 0
         end   = int(match.group(2)), 999
     match = re.match('^(\d?\w+)\s*(\d+)\s*-\s*(\d+)$', text)              # Case 5: "book c1 - c2"
     if match:
-        code  = match.group(1)
+        code  = match.group(1).lower()
         start = int(match.group(2)), 0
         end   = int(match.group(3)), 999
     books = get_books()
