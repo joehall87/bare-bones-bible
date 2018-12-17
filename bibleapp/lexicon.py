@@ -4,6 +4,9 @@ import os.path
 import re
 
 
+_BLB_LINK = '<a href="https://www.blueletterbible.org/lang/lexicon/lexicon.cfm?t=kjv&strongs={id}">{id}</a>'
+
+
 class Lexicon(object):
 	"""Wrapper around the Hebrew lexicon."""
 	_CHARACTERS = '\u05D0-\u05EA'
@@ -32,8 +35,8 @@ class Lexicon(object):
 					info = strong['meaning'] + '; ' + strong['usage']
 				else:
 					info = strong['meaning'] or strong['usage']
-				descs.append("<strong>{word} {pron}</strong> - <em>{defn}</em> - {info} [{id}]".format(
-					word=entry['w'], defn=entry['def'], pron=strong['pron'], info=info, id=strong['id'],
+				descs.append("<strong>{word} {pron}</strong> - <em>{defn}</em> - {info} [{url}]".format(
+					word=entry['w'], defn=entry['def'], pron=strong['pron'], info=info, url=_BLB_LINK.format(id=strong['id']),
 				))
 			elif entry['def']:
 				descs.append("<strong>{word}</strong> - <em>{defn}</em>".format(

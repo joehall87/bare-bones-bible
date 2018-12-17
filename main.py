@@ -3,65 +3,10 @@ import re
 
 from flask import Flask, render_template, redirect, request, url_for
 
-from bibleapp.book import Book
+from bibleapp.book import get_books
 
 
 app = Flask(__name__)
-
-
-torah = [
-    Book('Genesis'),
-    Book('Exodus'),
-    Book('Leviticus'),
-    Book('Numbers'),
-    Book('Deuteronomy'),
-]
-
-neviim = [
-    Book('Joshua'),
-    Book('Judges'),
-    Book('1 Samuel'),
-    Book('2 Samuel'),
-    Book('1 Kings'),
-    Book('2 Kings'),
-    Book('Isaiah'),
-    Book('Jeremiah'),
-    Book('Ezekiel'),
-    Book('Hosea'),
-    Book('Joel'),
-    Book('Amos'),
-    Book('Obadiah'),
-    Book('Jonah'),
-    Book('Micah'),
-    Book('Nahum'),
-    Book('Habakkuk'),
-    Book('Zephaniah'),
-    Book('Haggai'),
-    Book('Zechariah'),
-    Book('Malachi'),
-]
-
-ketuvim = [
-    Book('Psalms'),
-    Book('Proverbs'),
-    Book('Job'),
-    Book('Song of Songs'),
-    Book('Ruth'),
-    Book('Lamentations'),
-    Book('Ecclesiastes'),
-    Book('Esther'),
-    Book('Daniel'),
-    Book('Ezra'),
-    Book('Nehemiah'),
-    Book('1 Chronicles'),
-    Book('2 Chronicles'),
-]
-
-dropdown = (
-    [('h5', 'header', 'Torah',   '')] + [('a', 'item', book.name, 'href=/book?book={}'.format(book.code)) for book in torah] + [('div', 'divider', '', '')] +
-    [('h5', 'header', 'Neviim',  '')] + [('a', 'item', book.name, 'href=/book?book={}'.format(book.code)) for book in neviim] + [('div', 'divider', '', '')] +
-    [('h5', 'header', 'Ketuvim', '')] + [('a', 'item', book.name, 'href=/book?book={}'.format(book.code)) for book in ketuvim]
-)
 
 
 @app.route('/')
@@ -73,19 +18,21 @@ def root():
 @app.route('/home')
 def home():
     """Home page."""
-    return render_template('home.html', page='home', dropdown=dropdown)
+    books = get_books()
+    return render_template('home.html', page='home', dropdown=_get_dropdown(books))
 
 
 @app.route('/book')
 def book():
     """Show book."""
+    books = get_books()
     code = request.args['book']
-    book = [book for books in [torah, neviim, ketuvim] for book in books if book.code == code][0]
+    book = [book for books in books.values() for book in books if book.code == code][0]
     start, end = None, None
     if 'chapter' in request.args:
         c = int(request.args['chapter'])
         start, end = (c, 0), (c, 999)
-    return render_template('home.html', page='book', dropdown=dropdown, book=book, cv_start=start, cv_end=end)
+    return render_template('home.html', page='book', dropdown=_get_dropdown(books), book=book, cv_start=start, cv_end=end)
 
 
 @app.route('/search')
@@ -117,8 +64,18 @@ def search():
         code  = match.group(1)
         start = int(match.group(2)), 0
         end   = int(match.group(3)), 999
-    book = [book for books in [torah, neviim, ketuvim] for book in books if book.code == code][0]
-    return render_template('home.html', page='book', dropdown=dropdown, book=book, cv_start=start, cv_end=end)
+    books = get_books()
+    book = [book for books in books.values() for book in books if book.code == code][0]
+    return render_template('home.html', page='book', dropdown=_get_dropdown(books), book=book, cv_start=start, cv_end=end)
+
+
+def _get_dropdown(books):
+    dropdown = []
+    for part in ['Torah', 'Neviim', 'Ketuvim']:
+        dropdown.append(('h5', 'header', part, ''))
+        dropdown.extend([('a', 'item', book.name, 'href=/book?book={}'.format(book.code)) for book in books[part]])
+        dropdown.append(('div', 'divider', '', ''))
+    return dropdown[:-1]
 
 
 if __name__ == '__main__':
