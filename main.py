@@ -117,7 +117,6 @@ def search():
         code  = match.group(1)
         start = int(match.group(2)), 0
         end   = int(match.group(3)), 999
-    print(start, end)
     book = [book for books in [torah, neviim, ketuvim] for book in books if book.code == code][0]
     return render_template('home.html', page='book', dropdown=dropdown, book=book, cv_start=start, cv_end=end)
 
