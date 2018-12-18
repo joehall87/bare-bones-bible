@@ -47,7 +47,7 @@
       </ul>
       <!-- Searching -->
       <form class="form-inline my-2 my-lg-0" action="/search">
-        <input class="form-control mr-sm-2" name="text" type="search" placeholder="Search" aria-label="Search">
+        <input class="form-control mr-sm-2" name="passage" type="search" placeholder="Search" aria-label="Search">
         <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
       </form>
     </div>
@@ -111,7 +111,7 @@
     </div>
     {% endfor %}
     {% endfor %}
-    {% for token in book.iter_he_tokens(cv_start, cv_end) %}
+    {% for token in book.iter_unique_he_tokens(cv_start, cv_end) %}
     <div class="modal fade" id="{{token.word}}" tabindex="-1" role="dialog" aria-labelledby="{{token.word}}-label" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">

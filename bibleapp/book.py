@@ -6,58 +6,6 @@ import re
 from .lexicon import Lexicon
 
 
-def get_books():
-	"""Get all books in Tanakh."""
-	# TODO: Make this a class!!
-	return {
-		'Torah': [
-		    Book('Genesis'),
-		    Book('Exodus'),
-		    Book('Leviticus'),
-		    Book('Numbers'),
-		    Book('Deuteronomy'),
-		],
-		'Neviim': [
-		    Book('Joshua'),
-		    Book('Judges'),
-		    Book('1 Samuel'),
-		    Book('2 Samuel'),
-		    Book('1 Kings'),
-		    Book('2 Kings'),
-		    Book('Isaiah'),
-		    Book('Jeremiah'),
-		    Book('Ezekiel'),
-		    Book('Hosea'),
-		    Book('Joel'),
-		    Book('Amos'),
-		    Book('Obadiah'),
-		    Book('Jonah'),
-		    Book('Micah'),
-		    Book('Nahum'),
-		    Book('Habakkuk'),
-		    Book('Zephaniah'),
-		    Book('Haggai'),
-		    Book('Zechariah'),
-		    Book('Malachi'),
-		],
-		'Ketuvim': [
-		    Book('Psalms'),
-		    Book('Proverbs'),
-		    Book('Job'),
-		    Book('Song of Songs'),
-		    Book('Ruth'),
-		    Book('Lamentations'),
-		    Book('Ecclesiastes'),
-		    Book('Esther'),
-		    Book('Daniel'),
-		    Book('Ezra'),
-		    Book('Nehemiah'),
-		    Book('1 Chronicles'),
-		    Book('2 Chronicles'),
-		],
-	}
-
-
 _RESOURCES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'resources')
 _CHARACTERS = '\u05D0-\u05EA'
 _VOWELS = '\u05B0-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7'
@@ -65,14 +13,112 @@ _PUNCTUATION = '\u05BE\u05C0\u05C3\u05C6'  # Maqaf (-), Paseq (|), Sof Pasuq (:)
 _CANTILLATIONS = '\u0591-\u05AF'
 
 
+class Tanakh():
+	"""Wrapper around all books in Tanakh."""
+	def __init__(self):
+		self.lexicon = Lexicon()
+		self.books = [Book(collection, name, lexicon=self.lexicon) for collection, name in [
+			('Torah', 'Genesis'),
+			('Torah', 'Exodus'),
+			('Torah', 'Leviticus'),
+			('Torah', 'Numbers'),
+			('Torah', 'Deuteronomy'),
+			('Neviim', 'Joshua'),
+			('Neviim', 'Judges'),
+			('Neviim', '1 Samuel'),
+			('Neviim', '2 Samuel'),
+			('Neviim', '1 Kings'),
+			('Neviim', '2 Kings'),
+			('Neviim', 'Isaiah'),
+			('Neviim', 'Jeremiah'),
+			('Neviim', 'Ezekiel'),
+			('Neviim', 'Hosea'),
+			('Neviim', 'Joel'),
+			('Neviim', 'Amos'),
+			('Neviim', 'Obadiah'),
+			('Neviim', 'Jonah'),
+			('Neviim', 'Micah'),
+			('Neviim', 'Nahum'),
+			('Neviim', 'Habakkuk'),
+			('Neviim', 'Zephaniah'),
+			('Neviim', 'Haggai'),
+			('Neviim', 'Zechariah'),
+			('Neviim', 'Malachi'),
+			('Ketuvim', 'Psalms'),
+			('Ketuvim', 'Proverbs'),
+			('Ketuvim', 'Job'),
+			('Ketuvim', 'Song of Songs'),
+			('Ketuvim', 'Ruth'),
+			('Ketuvim', 'Lamentations'),
+			('Ketuvim', 'Ecclesiastes'),
+			('Ketuvim', 'Esther'),
+			('Ketuvim', 'Daniel'),
+			('Ketuvim', 'Ezra'),
+			('Ketuvim', 'Nehemiah'),
+			('Ketuvim', '1 Chronicles'),
+			('Ketuvim', '2 Chronicles'),
+		]]
+
+	def get_dropdown(self):
+		"""Get dropdown."""
+		dropdown = []
+		prev_collection = None
+		for book in self.books:
+			if book.collection != prev_collection:
+				collection = prev_collection
+				dropdown.append(('div', 'divider', '', ''))
+				dropdown.append(('h5', 'header', collection, ''))
+			dropdown.append(('a', 'item', book.name, 'href=/book?book={}'.format(book.code)))
+		return dropdown[1:]
+
+	def get_book(self, code):
+		"""Get a specific book."""
+		return [book for book in self.books if book.code == code.lower()][0]
+
+	def get_passage(self, passage_str):
+		"""Return the matching (book, cv_start, cv_end) tuple."""
+		# Case 1: "book c1:v1 - c2:v2"
+		match = re.match('^(\d?\w+)\s*(\d+):(\d+)\s*-\s*(\d+):(\d+)$', passage_str)
+		if match:
+			code  = match.group(1).lower()
+			start = int(match.group(2)), int(match.group(3))
+			end   = int(match.group(4)), int(match.group(5))
+		# Case 2: "book c1:v1 - v2"
+		match = re.match('^(\d?\w+)\s*(\d+):(\d+)\s*-\s*(\d+)$', passage_str)
+		if match:
+			code  = match.group(1).lower()
+			start = int(match.group(2)), int(match.group(3))
+			end   = int(match.group(2)), int(match.group(4))
+		# Case 3: "book c1:v1"
+		match = re.match('^(\d?\w+)\s*(\d+):(\d+)$', passage_str)
+		if match:
+			code  = match.group(1).lower()
+			start = int(match.group(2)), int(match.group(3))
+			end   = start
+		# Case 4: "book c1"
+		match = re.match('^(\d?\w+)\s*(\d+)$', passage_str)						  
+		if match:
+			code  = match.group(1).lower()
+			start = int(match.group(2)), 0
+			end   = int(match.group(2)), 999
+		# Case 5: "book c1 - c2"
+		match = re.match('^(\d?\w+)\s*(\d+)\s*-\s*(\d+)$', passage_str)
+		if match:
+			code  = match.group(1).lower()
+			start = int(match.group(2)), 0
+			end   = int(match.group(3)), 999
+		return self.get_book(code), start, end
+
+
 class Book(object):
 	"""Wrapper around the Hebrew text for a book."""
 
-	def __init__(self, name):
+	def __init__(self, collection, name, lexicon=None):
+		self.collection = collection
 		self.name = name
 		self.code = name.replace(' ', '').lower()[:4 if name[0].isdigit() else 3]
+		self.lexicon = lexicon
 		self._content = None
-		self._lexicon = None
 
 	@property
 	def content(self):
@@ -80,12 +126,6 @@ class Book(object):
 		if self._content is None:
 			self._content = self._init_content()
 		return self._content
-
-	@property
-	def lexicon(self):
-		if self._lexicon is None:
-			self._lexicon = Lexicon()
-		return self._lexicon
 	
 	def _init_content(self):
 		content = []
@@ -119,7 +159,7 @@ class Book(object):
 		if verses:
 			yield chapter, verses
 
-	def iter_he_tokens(self, cv_start=None, cv_end=None):
+	def iter_unique_he_tokens(self, cv_start=None, cv_end=None):
 		"""Iterate over unique tokens."""
 		used = set()
 		for chapter, verses in self.iter_verses_by_chapter(cv_start, cv_end):
@@ -158,7 +198,6 @@ class Verse(object):
 					self._he_tokens.extend([Token(parts[-1], space, lexicon=self.lexicon)])
 				else:
 					self._he_tokens.append(Token(word, space, lexicon=self.lexicon))
-			print(self._he_tokens)
 		return self._he_tokens	
 
 
@@ -166,6 +205,7 @@ class Token(object):
 	"""Token wrapper."""
 	def __init__(self, word, space=None, lexicon=None):
 		self.word = word
+		self.word_no_vowels = re.sub('[^{}]'.format(_CHARACTERS), '', self.word)
 		self.space = space
 		self.lexicon = lexicon
 

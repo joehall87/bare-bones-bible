@@ -3,7 +3,7 @@ import re
 
 from flask import Flask, render_template, redirect, request, url_for
 
-from bibleapp.book import get_books
+from bibleapp.book import Tanakh
 
 
 app = Flask(__name__)
@@ -18,64 +18,29 @@ def root():
 @app.route('/home')
 def home():
     """Home page."""
-    books = get_books()
-    return render_template('home.html', page='home', dropdown=_get_dropdown(books))
+    return render_template('home.html', page='home', dropdown=Tanakh().get_dropdown())
 
 
 @app.route('/book')
 def book():
     """Show book."""
-    books = get_books()
-    code = request.args['book']
-    book = [book for books in books.values() for book in books if book.code == code][0]
-    start, end = None, None
+    tanakh = Tanakh()
+    book = tanakh.get_book(request.args['book'])
     if 'chapter' in request.args:
         c = int(request.args['chapter'])
         start, end = (c, 0), (c, 999)
-    return render_template('home.html', page='book', dropdown=_get_dropdown(books), book=book, cv_start=start, cv_end=end)
+    else:
+        start, end = None, None
+    return render_template('home.html', page='book', dropdown=tanakh.get_dropdown(), book=book, cv_start=start, cv_end=end)
 
 
 @app.route('/search')
 def search():
     """Search for a range of text."""
-    text = request.args['text'].strip()
-    match = re.match('^(\d?\w+)\s*(\d+):(\d+)\s*-\s*(\d+):(\d+)$', text)  # Case 1: "book c1:v1 - c2:v2"
-    if match:
-        code  = match.group(1).lower()
-        start = int(match.group(2)), int(match.group(3))
-        end   = int(match.group(4)), int(match.group(5))
-    match = re.match('^(\d?\w+)\s*(\d+):(\d+)\s*-\s*(\d+)$', text)        # Case 2: "book c1:v1 - v2"
-    if match:
-        code  = match.group(1).lower()
-        start = int(match.group(2)), int(match.group(3))
-        end   = int(match.group(2)), int(match.group(4))
-    match = re.match('^(\d?\w+)\s*(\d+):(\d+)$', text)                    # Case 3: "book c1:v1"
-    if match:
-        code  = match.group(1).lower()
-        start = int(match.group(2)), int(match.group(3))
-        end   = start
-    match = re.match('^(\d?\w+)\s*(\d+)$', text)                          # Case 4: "book c1"
-    if match:
-        code  = match.group(1).lower()
-        start = int(match.group(2)), 0
-        end   = int(match.group(2)), 999
-    match = re.match('^(\d?\w+)\s*(\d+)\s*-\s*(\d+)$', text)              # Case 5: "book c1 - c2"
-    if match:
-        code  = match.group(1).lower()
-        start = int(match.group(2)), 0
-        end   = int(match.group(3)), 999
-    books = get_books()
-    book = [book for books in books.values() for book in books if book.code == code][0]
-    return render_template('home.html', page='book', dropdown=_get_dropdown(books), book=book, cv_start=start, cv_end=end)
-
-
-def _get_dropdown(books):
-    dropdown = []
-    for part in ['Torah', 'Neviim', 'Ketuvim']:
-        dropdown.append(('h5', 'header', part, ''))
-        dropdown.extend([('a', 'item', book.name, 'href=/book?book={}'.format(book.code)) for book in books[part]])
-        dropdown.append(('div', 'divider', '', ''))
-    return dropdown[:-1]
+    tanakh = Tanakh()
+    passage_str = request.args['passage'].strip()
+    book, start, end = tanakh.get_passage(passage_str)
+    return render_template('home.html', page='book', dropdown=tanakh.get_dropdown(), book=book, cv_start=start, cv_end=end)
 
 
 if __name__ == '__main__':
