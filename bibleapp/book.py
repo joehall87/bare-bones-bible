@@ -65,9 +65,9 @@ class Tanakh():
 		prev_collection = None
 		for book in self.books:
 			if book.collection != prev_collection:
-				collection = prev_collection
+				prev_collection = book.collection
 				dropdown.append(('div', 'divider', '', ''))
-				dropdown.append(('h5', 'header', collection, ''))
+				dropdown.append(('h5', 'header', book.collection, ''))
 			dropdown.append(('a', 'item', book.name, 'href=/book?book={}'.format(book.code)))
 		return dropdown[1:]
 
