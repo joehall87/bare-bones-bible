@@ -71,40 +71,40 @@ class Tanakh():
 			dropdown.append(('a', 'item', book.name, 'href=/book?book={}'.format(book.code)))
 		return dropdown[1:]
 
-	def get_book(self, code):
+	def get_book(self, alias):
 		"""Get a specific book."""
-		return [book for book in self.books if book.code == code.lower()][0]
+		return [book for book in self.books if book.is_match(alias)][0]
 
 	def get_passage(self, passage_str):
 		"""Return the matching (book, cv_start, cv_end) tuple."""
 		# Case 1: "book c1:v1 - c2:v2"
-		match = re.match('^(\d?\w+)\s*(\d+):(\d+)\s*-\s*(\d+):(\d+)$', passage_str)
+		match = re.match('^([\w\s]+)\s*(\d+):(\d+)\s*-\s*(\d+):(\d+)$', passage_str)
 		if match:
-			code  = match.group(1).lower()
+			code  = match.group(1)
 			start = int(match.group(2)), int(match.group(3))
 			end   = int(match.group(4)), int(match.group(5))
 		# Case 2: "book c1:v1 - v2"
-		match = re.match('^(\d?\w+)\s*(\d+):(\d+)\s*-\s*(\d+)$', passage_str)
+		match = re.match('^([\w\s]+)\s*(\d+):(\d+)\s*-\s*(\d+)$', passage_str)
 		if match:
-			code  = match.group(1).lower()
+			code  = match.group(1)
 			start = int(match.group(2)), int(match.group(3))
 			end   = int(match.group(2)), int(match.group(4))
 		# Case 3: "book c1:v1"
-		match = re.match('^(\d?\w+)\s*(\d+):(\d+)$', passage_str)
+		match = re.match('^([\w\s]+)\s*(\d+):(\d+)$', passage_str)
 		if match:
-			code  = match.group(1).lower()
+			code  = match.group(1)
 			start = int(match.group(2)), int(match.group(3))
 			end   = start
 		# Case 4: "book c1"
-		match = re.match('^(\d?\w+)\s*(\d+)$', passage_str)						  
+		match = re.match('^([\w\s]+)\s*(\d+)$', passage_str)						  
 		if match:
-			code  = match.group(1).lower()
+			code  = match.group(1)
 			start = int(match.group(2)), 0
 			end   = int(match.group(2)), 999
 		# Case 5: "book c1 - c2"
-		match = re.match('^(\d?\w+)\s*(\d+)\s*-\s*(\d+)$', passage_str)
+		match = re.match('^([\w\s]+)\s*(\d+)\s*-\s*(\d+)$', passage_str)
 		if match:
-			code  = match.group(1).lower()
+			code  = match.group(1)
 			start = int(match.group(2)), 0
 			end   = int(match.group(3)), 999
 		return self.get_book(code), start, end
@@ -116,8 +116,19 @@ class Book(object):
 	def __init__(self, collection, name, lexicon=None):
 		self.collection = collection
 		self.name = name
-		self.code = name.replace(' ', '').lower()[:4 if name[0].isdigit() else 3]
 		self.lexicon = lexicon
+		name = name.replace(' ', '').lower()
+		if name[0].isdigit():
+			num = name[0]
+			name = name[1:]
+			self.code = num + name[:3]
+			self._aliases = set([num + name, name + num])
+			self._aliases |= set(num + name[:i] for i in range(2, 6))
+			self._aliases |= set(name[:i] + num for i in range(2, 6))
+		else:
+			self.code = name.lower()[:3]
+			self._aliases = set([name])
+			self._aliases |= set(name[:i].lower() for i in range(2, 6))
 		self._content = None
 
 	@property
@@ -138,6 +149,11 @@ class Book(object):
 			for v, (en_verse, he_verse) in enumerate(zip(en_chapter, he_chapter), start=1):
 				content.append((c, Verse(v, en_verse, he_verse, lexicon=self.lexicon)))
 		return content
+
+	def is_match(self, alias):
+		"""Does this alias match this book?"""
+		print(self._aliases)
+		return alias.replace(' ', '').lower() in self._aliases
 
 	@property
 	def num_chapters(self):
@@ -175,6 +191,8 @@ class Verse(object):
 	def __init__(self, num, english, hebrew, lexicon=None):
 		self.num = num
 		self.english = english
+		for alias in ['the Lord', 'The Lord']:
+			self.english = self.english.replace(alias, 'Yahweh')
 		self.hebrew = hebrew
 		self.lexicon = lexicon
 		self._he_tokens = None
@@ -191,6 +209,7 @@ class Verse(object):
 					self._he_tokens[-1].space += '\u05C0 '
 					continue
 				elif word[0] == '[':
+					word = word[1:]
 					self._he_tokens[-1].space += ' ['
 
 				if word[-1] == '\u05C3':

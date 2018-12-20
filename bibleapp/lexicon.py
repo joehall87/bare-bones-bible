@@ -30,31 +30,32 @@ class Lexicon(object):
 		# 1. Google translate
 		trans = entry['trans']
 		root = entry.get('root')
+		if trans == 'The sky':
+			print(root)
 		if root:
 			entry = self.map.get(root)
 		if trans and root:
-			desc += '<p>Google says <strong>{}</strong> means <em>"{}"</em>, the root word is probably <strong>{}</strong>, which means <em>"{}"</em></p>'.format(
+			desc += '<p><strong>{}</strong> means <em>"{}"</em> (according to Google), the root word is probably <strong>{}</strong>, which means <em>"{}"</em></p>'.format(
 				word, trans, root, entry['trans'])
 		elif trans:
-			desc += '<p>Google says <strong>{}</strong> means <em>"{}"</em></p>'.format(word, trans)
+			desc += '<p><strong>{}</strong> means <em>"{}"</em> (according to Google)</p>'.format(word, trans)
 		else:
 			desc += "<p>Google doesn't know what this means!</p>"
 
 		# 2. References
-		desc += (
-			"<hr/><p>First appears in {first} and is used <strong>{n}</strong> times in the Tanakh.".format(
-				first=self._make_ref_link(entry['refs'][0]), n=len(entry['refs']))
-		)
+		refs = entry.get('refs')
+		if refs:
+			variants = ['{} ({})'.format(v, self.map.get(v)['trans']) for v in entry['variants']]
+			desc += (
+				"<hr/><p>{root} first appears in {first} and is used <strong>{n}</strong> times in the Tanakh in the forms: {variants}".format(
+					root=root or word, first=self._make_ref_link(refs[0]), n=len(refs), variants=' '.join(variants))
+			)
 
 		# 3. Strongs
-		for item in entry.get('index', []):
-			strongs = item['strongs']
-			if strongs:
-				desc += "<hr/><p>[{url}] <strong>{word} {pron}</strong> - <em>{defn}</em> - {info}</p>".format(
-					word=item['w'], defn=item['def'], pron=strongs['pron'], info=strongs['desc'], url=_BLB_LINK.format(id=strongs['id']))
-			elif entry['index'].get('def'):
-				desc += "<hr/><p><strong>{word}</strong> - <em>{defn}</em></p>".format(
-					word=item['w'], defn=item['def'])
+		for item in entry.get('strongs', []):
+			desc += "<hr/><p>[{url}] <strong>{word} {pron}</strong> - {desc}</p>".format(
+				word=item['w'], pron=item['pron'], desc=item['desc'], url=_BLB_LINK.format(id=item['id']))
+
 		return desc.replace('<def>', '<em>').replace('</def>', '</em>')
 
 	@staticmethod

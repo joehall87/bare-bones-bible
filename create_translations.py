@@ -13,11 +13,6 @@ from bibleapp.book import Tanakh
 OPENSCRIPTURES_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'resources', 'openscriptures')
 
 
-PREFIXES = ['and', 'as', 'at', 'for', 'from', 'in', 'like', 'on', 'the', 'to', 'when', 'will', 'with', 'you will']
-SUFFIXES = ['he', 'her', 'his', 'my', 'our', 'she', 'their', 'they', 'we', 'you', 'your']
-PRE_AND_SUF = ['in her', 'in his', 'in my', 'in their', 'they will', 'to her', 'to his', 'to my', 'to our', 'to their', 'with her', 'with his']
-
-
 def run():
 	"""Translate all words.
 

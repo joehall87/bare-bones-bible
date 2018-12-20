@@ -25,6 +25,7 @@ def home():
 def book():
     """Show book."""
     tanakh = Tanakh()
+    print(request.args['book'])
     book = tanakh.get_book(request.args['book'])
     if 'chapter' in request.args:
         c = int(request.args['chapter'])
