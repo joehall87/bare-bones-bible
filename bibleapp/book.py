@@ -190,8 +190,14 @@ class Verse(object):
 				if word == '\u05C0':
 					self._he_tokens[-1].space += '\u05C0 '
 					continue
+				elif word[0] == '[':
+					self._he_tokens[-1].space += ' ['
+
 				if word[-1] == '\u05C3':
-					word, space = word[:-1], '\u05C3'
+					word, space = word[:-1], '\u05C3 '
+				elif word[-1] == ']':
+					word, space = word[:-1], '] '
+
 				if '\u05BE' in word:
 					parts = word.split('\u05BE')
 					self._he_tokens.extend([Token(part, '\u05BE', lexicon=self.lexicon) for part in parts[:-1]])

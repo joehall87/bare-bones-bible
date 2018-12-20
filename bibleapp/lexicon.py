@@ -10,11 +10,8 @@ _BLB_LINK = '<a href="https://www.blueletterbible.org/lang/lexicon/lexicon.cfm?t
 
 class Lexicon(object):
 	"""Wrapper around the Hebrew lexicon."""
-	_CHARACTERS = '\u05D0-\u05EA'
-
 	def __init__(self):
 		self._map = None
-		self._map_clean = None
 
 	@property
 	def map(self):
@@ -23,54 +20,41 @@ class Lexicon(object):
 			with open(path, 'r') as f:
 				self._map = json.load(f)
 		return self._map
-	
-	@property
-	def map_clean(self):
-		if self._map_clean is None:
-			self._map_clean = defaultdict(list)
-			for entry in self.map.values():
-				self._map_clean[entry['w-clean']].append(entry)
-		return self._map_clean
-
-	def get(self, word):
-		"""Get the entry for a word."""
-		word = re.sub("[^{}]".format(self._CHARACTERS), "", word)
-		return self.map_clean[word]
 
 	def description(self, word):
 		"""Return an html-description of the word."""
 		desc = ''
-		entries = self.get(word)
+		word = re.sub("[^\u05D0-\u05EA]", "", word)
+		entry = self.map.get(word)
 
 		# 1. Google translate
-		if entries[0]['trans']:
-			desc += '<p>Google says this means <em>"{}"</em></p>'.format(entries[0]['trans'])
+		trans = entry['trans']
+		root = entry.get('root')
+		if root:
+			entry = self.map.get(root)
+		if trans and root:
+			desc += '<p>Google says <strong>{}</strong> means <em>"{}"</em>, the root word is probably <strong>{}</strong>, which means <em>"{}"</em></p>'.format(
+				word, trans, root, entry['trans'])
+		elif trans:
+			desc += '<p>Google says <strong>{}</strong> means <em>"{}"</em></p>'.format(word, trans)
 		else:
 			desc += "<p>Google doesn't know what this means!</p>"
 
-		# 1. References
-		allrefs = sorted([ref for entry in entries for ref in entry['refs']], key=_ref_sort_key)
-		pretty_ref = lambda x: '{} {}:{}'.format(x[0].title(), x[1], x[2])
+		# 2. References
 		desc += (
-			"<hr/><p>It first appears in {first} and is used <strong>{n}</strong> times in the Tanakh in the following variants: {variants}.".format(
-				first=self._make_ref_link(allrefs[0]), n=len(allrefs), variants=' '.join([x['w'] for x in entries])
-		))
+			"<hr/><p>First appears in {first} and is used <strong>{n}</strong> times in the Tanakh.".format(
+				first=self._make_ref_link(entry['refs'][0]), n=len(entry['refs']))
+		)
 
 		# 3. Strongs
-		for entry in entries:
-			strongs = entry['strongs']
+		for item in entry.get('index', []):
+			strongs = item['strongs']
 			if strongs:
-				if strongs['meaning'] and strongs['usage']:
-					info = strongs['meaning'] + '; ' + strongs['usage']
-				else:
-					info = strongs['meaning'] or strongs['usage']
 				desc += "<hr/><p>[{url}] <strong>{word} {pron}</strong> - <em>{defn}</em> - {info}</p>".format(
-					word=entry['w'], defn=entry['index']['def'], pron=strongs['pron'], info=info, url=_BLB_LINK.format(id=strongs['id']),
-				)
+					word=item['w'], defn=item['def'], pron=strongs['pron'], info=strongs['desc'], url=_BLB_LINK.format(id=strongs['id']))
 			elif entry['index'].get('def'):
 				desc += "<hr/><p><strong>{word}</strong> - <em>{defn}</em></p>".format(
-					word=entry['w'], defn=entry['index']['def'],
-				)
+					word=item['w'], defn=item['def'])
 		return desc.replace('<def>', '<em>').replace('</def>', '</em>')
 
 	@staticmethod
