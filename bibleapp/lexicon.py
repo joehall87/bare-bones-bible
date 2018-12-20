@@ -52,8 +52,10 @@ class Lexicon(object):
 			)
 
 		# 3. Strongs
-		for item in entry.get('strongs', []):
-			desc += "<hr/><p>[{url}] <strong>{word} {pron}</strong> - {desc}</p>".format(
+		for i, item in enumerate(entry.get('strongs', [])):
+			if i == 0:
+				desc += '<hr/>'
+			desc += "<p>[{url}] <strong>{word} {pron}</strong> - {desc}</p>".format(
 				word=item['w'], pron=item['pron'], desc=item['desc'], url=_BLB_LINK.format(id=item['id']))
 
 		return desc.replace('<def>', '<em>').replace('</def>', '</em>')
