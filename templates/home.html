@@ -105,6 +105,10 @@
               <strong>{{verse.num}}</strong> 
               {% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{token.word}}">{{token.word}}</a>{{token.space}}{% endfor %}
             </p>
+            <p>
+              <strong>{{verse.num}}</strong> 
+              <em>{{verse.transliteration}}</em>
+            </p>
           </bdo>
         </div>
       </div>
@@ -116,7 +120,7 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="{{token.id}}-label">{{token.word}}</h5>
+            <h5 class="modal-title" id="{{token.id}}-label">{{token.word}} [{{token.transliteration}}]</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>

@@ -3,6 +3,7 @@ import os
 import os.path
 import re
 
+from .hebrew import Hebrew
 from .lexicon import Lexicon
 
 
@@ -11,6 +12,9 @@ _CHARACTERS = '\u05D0-\u05EA'
 _VOWELS = '\u05B0-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7'
 _PUNCTUATION = '\u05BE\u05C0\u05C3\u05C6'  # Maqaf (-), Paseq (|), Sof Pasuq (:), Nun Hafukha
 _CANTILLATIONS = '\u0591-\u05AF'
+
+
+_HEBREW = Hebrew()
 
 
 class Tanakh():
@@ -194,6 +198,7 @@ class Verse(object):
 		for alias in ['the Lord', 'The Lord']:
 			self.english = self.english.replace(alias, 'Yahweh')
 		self.hebrew = hebrew
+		self.transliteration = _HEBREW.transliterate(hebrew)
 		self.lexicon = lexicon
 		self._he_tokens = None
 
@@ -208,14 +213,12 @@ class Verse(object):
 				if word == '\u05C0':
 					self._he_tokens[-1].space += '\u05C0 '
 					continue
-				elif word[0] == '[':
+				elif word[0] in {'[', '(', '<'}:
 					word = word[1:]
-					self._he_tokens[-1].space += ' ['
+					self._he_tokens[-1].space += ' ' + word[0]
 
-				if word[-1] == '\u05C3':
-					word, space = word[:-1], '\u05C3 '
-				elif word[-1] == ']':
-					word, space = word[:-1], '] '
+				elif word[-1] in {'\u05C3', '[', '(', '<'}:
+					word, space = word[:-1], word[-1] + ' '
 
 				if '\u05BE' in word:
 					parts = word.split('\u05BE')
@@ -232,6 +235,7 @@ class Token(object):
 		self.word = word
 		self.word_no_vowels = re.sub('[^{}]'.format(_CHARACTERS), '', self.word)
 		self.space = space
+		self.transliteration = _HEBREW.transliterate(word)
 		self.lexicon = lexicon
 
 	@property

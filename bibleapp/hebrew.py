@@ -1,51 +1,231 @@
-from collections import defaultdict
-import logging
-import os
-
-# Have to install Translator in a dodgy way due to following issue:
-# https://stackoverflow.com/questions/52455774/googletrans-stopped-working-with-error-nonetype-object-has-no-attribute-group
-from googletrans import Translator
-import untangle
-
-
-logging.basicConfig(format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO)
-
-
-STRONGS_FILE = os.path.join(os.environ['HOME'], 'src', 'openscriptures', 'strongs', 'hebrew', 'StrongHebrewG.xml')
+import re
 
 
 class Hebrew(object):
+    _CANTILLATIONS = {
+        'etnahta': '\u0591',
+        'segol-acc': '\u0592',  # To avoid clash with the niqqud segol
+        'shalshelet': '\u0593',
+        'zaqef-qatan': '\u0594',
+        'zaqef-gadol': '\u0595',
+        'tipeha': '\u0596',
+        'revia': '\u0597',
+        'zarqa': '\u0598',
+        'pashta': '\u0599',
+        'yetiv': '\u059A',
+        'tevir': '\u059B',
+        'geresh': '\u059C',
+        'geresh-muqdam': '\u059D',
+        'gershayim': '\u059E',
+        'qarney-para': '\u059F',
+        'telisha-gedola': '\u05A0',
+        'pazer': '\u05A1',
+        'atnah-hafukh': '\u05A2',
+        'munah': '\u05A3',
+        'mahapakh': '\u05A4',
+        'merkha': '\u05A5',
+        'merkha-kefula': '\u05A6',
+        'darga': '\u05A7',
+        'qadma': '\u05A8',
+        'telisha-qetana': '\u05A9',
+        'yerah-ben-yomo': '\u05AA',
+        'ole': '\u05AB',
+        'iluy': '\u05AC',
+        'dehi': '\u05AD',
+        'zinor': '\u05AE',
+        'masora-circle': '\u05AF',
+    }
+    _NIQQUD = {
+        'sheva': '\u05B0',
+        'hataf-segol': '\u05B1',
+        'hataf-patah': '\u05B2',
+        'hataf-qamats': '\u05B3',
+        'hireq': '\u05B4',
+        'tsere': '\u05B5',
+        'segol': '\u05B6',
+        'patah': '\u05B7',
+        'qamats': '\u05B8',
+        'holam': '\u05B9',
+        'holam-haser': '\u05BA',
+        'qubuts': '\u05BB',
+        'dagesh': '\u05BC',
+        'meteg': '\u05BD',  # <- for stress-marking
+        'rafe': '\u05BF',   # <- opposite of dagesh
+        'shin-dot': '\u05C1',
+        'sin-dot': '\u05C2',
+        'upper-dot': '\u05C4',
+        'lower-dot': '\u05C5',
+        #'qamats-qatan': '\u05C7',  # <- Not used
+    }
+    _PUNCTUATION = {
+        'maqaf': '\u05BE',
+        'paseq': '\u05C0',
+        'sof-pasuq': '\u05C3',
+        'nun-hafukha': '\u05C6',
+    }
+    _CHARS = {
+        'aleph': '\u05D0',
+        'bet': '\u05D1',
+        'gimmel': '\u05D2',
+        'dalet': '\u05D3',
+        'heh': '\u05D4',
+        'vav': '\u05D5',
+        'zayin': '\u05D6',
+        'het': '\u05D7',
+        'tet': '\u05D8',
+        'yud': '\u05D9',
+        'kaf': '\u05DB',
+        'lamed': '\u05DC',
+        'mem': '\u05DE',
+        'nun': '\u05E0',
+        'samekh': '\u05E1',
+        'ayin': '\u05E2',
+        'peh': '\u05E4',
+        'tsadi': '\u05E6',
+        'qof': '\u05E7',
+        'resh': '\u05E8',
+        'shin': '\u05E9',
+        'tav': '\u05EA',
+
+        'f-kaf': '\u05DA',
+        'f-mem': '\u05DD',
+        'f-nun': '\u05DF',
+        'f-peh': '\u05E3',
+        'f-tsadi': '\u05E5',
+    }
+    _ALIASES = {
+        "'": 'aleph',
+        'b': 'bet',
+        'g': 'gimmel',
+        'd': 'dalet',
+        'h': 'heh',
+        'v': 'vav',
+        'z': 'zayin',
+        'ch': 'het',
+        't': 'tet',
+        'y': 'yud',
+        'k': 'kaf',
+        'l': 'lamed',
+        'm': 'mem',
+        'n': 'nun',
+        's': 'samekh',
+        "`": 'ayin',
+        'p': 'peh',
+        'ts': 'tsadi',
+        'q': 'qof',
+        'r': 'resh',
+        'sh': 'shin',
+        'th': 'tav',
+
+        'kF': 'f-kaf',
+        'mF': 'f-mem',
+        'nF': 'f-nun',
+        'pF': 'f-peh',
+        'tsF': 'f-tsadi',
+    }
+    _CONS_TRANSLIT = {
+        ('aleph',): "'",
+        ('bet', 'dagesh'): 'b',
+        ('bet',): 'v',
+        ('gimmel',): 'g',
+        ('dalet', 'dagesh'): 'd',
+        ('dalet',): 'th',   # d
+        ('heh',): 'h',
+        ('vav',): 'w',  # v
+        ('zayin',): 'z',
+        ('het',): 'ch',
+        ('tet',): 't',
+        ('yud',): 'y',
+        ('kaf', 'dagesh'): 'k',
+        ('kaf',): 'kh',
+        ('lamed',): 'l',
+        ('mem',): 'm',
+        ('nun',): 'n',
+        ('samekh',): 's',
+        ('ayin',): "`",
+        ('peh', 'dagesh'): 'p',
+        ('peh',): 'ph',
+        ('tsadi',): 'ts',
+        ('qof',): 'q',
+        ('resh',): 'r',
+        ('shin', 'shin-dot'): 'sh',
+        ('shin', 'sin-dot'): 's',
+        ('tav', 'dagesh'): 't',
+        ('tav',): 'th',  # t
+
+        ('f-kaf', 'dagesh'): 'kh',
+        ('f-kaf',): 'kh',
+        ('f-mem',): 'm',
+        ('f-nun',): 'n',
+        ('f-peh', 'dagesh'): 'p',
+        ('f-peh',): 'ph',
+        ('f-tsadi',): 'ts',
+    }
+    _VOWEL_TRANSLIT = {
+        ('sheva',): "'",
+        ('hataf-segol',): 'i',  # half
+        ('hataf-patah',): 'a',  # half
+        ('hataf-qamats',): 'u',  # half
+        ('hireq',): 'i',  # short
+        ('tsere',): 'e',  # long
+        ('segol',): 'e',  # short
+        ('patah',): 'a',  # short
+        ('qamats',): 'a',  # long
+        ('holam',): 'o',  # long
+        ('holam-haser',): 'o',  # long
+        ('qubuts',): 'oo',  # long
+    }
+    _PUNC_TRANSLIT = {
+        ('maqaf',): '-',
+        ('paseq',): '|',
+        ('sof-pasuq',): '',
+        ('nun-hafukha',): '',
+    }
+    _MAP = {k: v for dct in [_CANTILLATIONS, _NIQQUD, _PUNCTUATION, _CHARS] for k, v in dct.items()}
+    _IMAP = {v: k for k, v in _MAP.items()}
+
     def __init__(self):
-        self._gtrans = Translator()
-        self._strongs = defaultdict(lambda: {'ids': [], 'explanations': [], 'translations': []})
-        xml = untangle.parse(STRONGS_FILE)
-        for entry in xml.osis.osisText.div.div:
-            word = entry.w.cdata.strip()
-            expln = [x for x in entry.note if x['type'] == 'explanation'][0].cdata
-            trans = [x for x in entry.note if x['type'] == 'translation'][0].cdata
-            self._strongs[word]['ids'].append(entry.w['ID'])
-            self._strongs[word]['explanations'].append(expln)
-            self._strongs[word]['translations'].append(trans)
+        self._c_tmap = {''.join([self._MAP[i] for i in k]): v for k, v in self._CONS_TRANSLIT.items()}
+        self._v_tmap = {''.join([self._MAP[i] for i in k]): v for k, v in self._VOWEL_TRANSLIT.items()}
+        self._p_tmap = {''.join([self._MAP[i] for i in k]): v for k, v in self._PUNC_TRANSLIT.items()}
 
-    def to_hebrew(self, word):
-        """Translate to hebrew using Google-translate"""
-        return self._gtrans.translate(word, dest='he').text
+    def transliterate(self, phrase, reverse=False):
+        """Transliterate to english."""
+        tlit = ''
+        #for clump in self._iter_clumps(phrase):
+        #    print('(' + ')('.join([self._IMAP.get(c, c) for c in clump]) + ')')
+        #    print(self._tlit(clump))
+        tlit = ''.join([self._tlit(clump) for clump in self._iter_clumps(phrase)]).replace("''", "'")
+        return ' '.join(tlit.split()[::-1]) if reverse else tlit
 
-    def to_english(self, word):
-        """Translate to english using Google-translate"""
-        return self._gtrans.translate(word, dest='en').text
+    def _tlit(self, clump):
+        tlit = None
+        for tmap in [self._c_tmap, self._v_tmap, self._p_tmap]:
+            for i in range(len(clump), 0, -1):
+                tlit_ = tmap.get(clump[:i])
+                if tlit == 'b':
+                    print(clump[:i])
+                    print(tlit_)
+                if tlit_ is not None:
+                    tlit = (tlit or '') + tlit_
+                    clump = clump[len(tlit):]
+                    break
+        return clump if tlit is None else tlit
 
-    def strongs(self, word):
-        """Get the strong's entry for this word"""
-        return self._strongs[word]
+    def _iter_clumps(self, phrase):
+        clump = phrase[0]
+        ignore = {self._NIQQUD[i] for i in ['meteg', 'rafe', 'upper-dot', 'lower-dot']}
+        accents = set(self._CANTILLATIONS.values()) | set(self._NIQQUD.values())
+        for i, c in enumerate(phrase[1:]):
+            if c in ignore:
+                continue
+            if c in accents:
+                clump += c
+            else:
+                yield clump
+                clump = c
+        yield clump
 
-    def show(self, word):
-        """Pretty print the entry for the word"""
-        en = self.to_english(word)
-        entry = self.strongs(word)
-        print("***** {} *****".format(word))
-        print('Meaning: "{}"'.format(en))
-        for id, exp, trans in zip(entry['ids'], entry['explanations'], entry['translations']):
-            print(id)
-            print('-', exp)
-            print('-', trans)
+    #def __getattr__(self, item):
+    #    return self._MAP.get(item, self._MAP.get(self._ALIASES.get(item)))
+
