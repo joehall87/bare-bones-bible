@@ -5,7 +5,7 @@ import re
 import urllib.parse
 
 
-_BLB_LINK = '<a href="https://www.blueletterbible.org/lang/lexicon/lexicon.cfm?t=kjv&strongs={id}">{id}</a>'
+_BIBLE_HUB_LINK = '<a href="https://biblehub.com/hebrew/{id}.htm">H{id}</a>'
 
 
 class Lexicon(object):
@@ -56,7 +56,7 @@ class Lexicon(object):
 			if i == 0:
 				desc += '<hr/>'
 			desc += "<p>[{url}] <strong>{word} {pron}</strong> - {desc}</p>".format(
-				word=item['w'], pron=item['pron'], desc=item['desc'], url=_BLB_LINK.format(id=item['id']))
+				word=item['w'], pron=item['pron'], desc=item['desc'], url=_BIBLE_HUB_LINK.format(id=item['id'].strip('H')))
 
 		return desc.replace('<def>', '<em>').replace('</def>', '</em>')
 

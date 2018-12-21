@@ -195,7 +195,7 @@ class Verse(object):
 	def __init__(self, num, english, hebrew, lexicon=None):
 		self.num = num
 		self.english = english
-		for alias in ['the Lord', 'The Lord']:
+		for alias in ['the Lord', 'The Lord', 'the LORD', 'The LORD']:
 			self.english = self.english.replace(alias, 'Yahweh')
 		self.hebrew = hebrew
 		self.transliteration = _HEBREW.transliterate(hebrew)

@@ -203,12 +203,9 @@ class Hebrew(object):
         for tmap in [self._c_tmap, self._v_tmap, self._p_tmap]:
             for i in range(len(clump), 0, -1):
                 tlit_ = tmap.get(clump[:i])
-                if tlit == 'b':
-                    print(clump[:i])
-                    print(tlit_)
                 if tlit_ is not None:
                     tlit = (tlit or '') + tlit_
-                    clump = clump[len(tlit):]
+                    clump = clump[i:]
                     break
         return clump if tlit is None else tlit
 
