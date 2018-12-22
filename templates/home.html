@@ -10,13 +10,14 @@
   <style>
     /* Word highlighting */
     .hebrew {
+      font-family: 'David Libre', serif;
+      font-size: 150%;
+      color: black;
     }
     .hebrew a {
       /* See https://fonts.google.com/?subset=hebrew for other options */
       /*font-family: Arimo, sans-serif;*/
       /*font-family: 'Frank Ruhl Libre', serif;*/
-      font-family: 'David Libre', serif;
-      font-size: 150%;
       color: black;
       text-decoration: none;  /* Avoid underline on hover */
     }
@@ -108,9 +109,9 @@
       <div class="col-md-6">
         <div class="text-right">
           <bdo dir=rtl>
-            <p class="hebrew">
+            <p>
               <strong>{{verse.num}}</strong> 
-              {% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{token.word}}">{{token.word}}</a>{{token.space}}{% endfor %}
+              <span class="hebrew">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{token.word}}">{{token.word}}</a>{{token.space}}{% endfor %}</span>
             </p>
             <p>
               <em>{{verse.transliteration}}</em>
@@ -126,8 +127,8 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title hebrew" id="{{token.id}}-label">
-              {{token.word}} [{{token.transliteration}}]
+            <h5 class="modal-title" id="{{token.id}}-label">
+              <span class="hebrew">{{token.word}}</span> &ndash; {{token.transliteration}}
             </h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>

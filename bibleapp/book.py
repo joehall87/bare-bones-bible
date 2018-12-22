@@ -214,10 +214,10 @@ class Verse(object):
 					self._he_tokens[-1].space += '\u05C0 '
 					continue
 				elif word[0] in {'[', '(', '<'}:
-					word = word[1:]
 					self._he_tokens[-1].space += ' ' + word[0]
+					word = word[1:]
 
-				elif word[-1] in {'\u05C3', '[', '(', '<'}:
+				elif word[-1] in {'\u05C3', ']', ')', '>'}:
 					word, space = word[:-1], word[-1] + ' '
 
 				if '\u05BE' in word:

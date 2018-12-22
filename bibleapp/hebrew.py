@@ -180,7 +180,7 @@ class Hebrew(object):
         ('f-tsadi',): 'ts',
     }
     _VOWEL_TRANSLIT = {
-        ('sheva',): "'",
+        ('sheva',): "\u2018",
         ('hataf-segol',): 'e',  # half
         ('hataf-patah',): 'a',  # half
         ('hataf-qamats',): 'o',  # half
@@ -199,6 +199,19 @@ class Hebrew(object):
         ('sof-pasuq',): '',
         ('nun-hafukha',): '',
     }
+    _TRANSLIT_SUBS = [
+        ("\u2018\u2018", "\u2018"),
+        (" \u2018", " "),
+        ("^\u2018", ""),
+        ('iy', 'i'),
+        ('iw ', 'i '),
+        ('iw$', 'i'),
+        ('ay ', 'ai '),
+        ('ay$', 'ai'),
+        ('cha ', 'ach '),
+        ('cha$', 'ach'),
+        ('wo', 'o'),
+    ]
     _MAP = {k: v for dct in [_CANTILLATIONS, _NIQQUD, _PUNCTUATION, _CHARS] for k, v in dct.items()}
     _IMAP = {v: k for k, v in _MAP.items()}
 
@@ -209,16 +222,9 @@ class Hebrew(object):
 
     def transliterate(self, phrase, reverse=False):
         """Transliterate to english."""
-        tlit = ''
-        #for clump in self._iter_clumps(phrase):
-        #    print('(' + ')('.join([self._IMAP.get(c, c) for c in clump]) + ')')
-        #    print(self._tlit(clump))
         tlit = ''.join([self._tlit(clump) for clump in self._iter_clumps(phrase)])
-        tlit = tlit.replace("''", "'")
-        tlit = tlit.replace(" '", " ")
-        tlit = tlit.replace('iy', 'i')
-        tlit = tlit.replace('ay ', 'ai ')
-        tlit = tlit.replace('wo', 'o')
+        for seq, sub in self._TRANSLIT_SUBS:
+            tlit = re.sub(seq, sub, tlit)
         return ' '.join(tlit.split()[::-1]) if reverse else tlit
 
     def _tlit(self, clump):
