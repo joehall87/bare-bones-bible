@@ -82,35 +82,36 @@ class Tanakh():
 	def get_passage(self, passage_str):
 		"""Return the matching (book, cv_start, cv_end) tuple."""
 		# Case 1: "book c1:v1 - c2:v2"
-		match = re.match('^([\w\s]+)\s*(\d+):(\d+)\s*-\s*(\d+):(\d+)$', passage_str)
+		match = re.match('^([\w\s]+)\s+(\d+)\:(\d+)\s*-\s*(\d+):(\d+)$', passage_str)
 		if match:
 			code  = match.group(1)
 			start = int(match.group(2)), int(match.group(3))
 			end   = int(match.group(4)), int(match.group(5))
 		# Case 2: "book c1:v1 - v2"
-		match = re.match('^([\w\s]+)\s*(\d+):(\d+)\s*-\s*(\d+)$', passage_str)
+		match = re.match('^([\w\s]+)\s+(\d+)\:(\d+)\s*-\s*(\d+)$', passage_str)
 		if match:
 			code  = match.group(1)
 			start = int(match.group(2)), int(match.group(3))
 			end   = int(match.group(2)), int(match.group(4))
 		# Case 3: "book c1:v1"
-		match = re.match('^([\w\s]+)\s*(\d+):(\d+)$', passage_str)
+		match = re.match('^([\w\s]+)\s+(\d+)\:(\d+)$', passage_str)
 		if match:
 			code  = match.group(1)
 			start = int(match.group(2)), int(match.group(3))
 			end   = start
 		# Case 4: "book c1"
-		match = re.match('^([\w\s]+)\s*(\d+)$', passage_str)						  
+		match = re.match('^([\w\s]+)\s+(\d+)$', passage_str)						  
 		if match:
 			code  = match.group(1)
 			start = int(match.group(2)), 0
 			end   = int(match.group(2)), 999
 		# Case 5: "book c1 - c2"
-		match = re.match('^([\w\s]+)\s*(\d+)\s*-\s*(\d+)$', passage_str)
+		match = re.match('^([\w\s]+)\s+(\d+)\s*-\s*(\d+)$', passage_str)
 		if match:
 			code  = match.group(1)
 			start = int(match.group(2)), 0
 			end   = int(match.group(3)), 999
+		print(code, start, end)
 		return self.get_book(code), start, end
 
 
@@ -156,7 +157,6 @@ class Book(object):
 
 	def is_match(self, alias):
 		"""Does this alias match this book?"""
-		print(self._aliases)
 		return alias.replace(' ', '').lower() in self._aliases
 
 	@property

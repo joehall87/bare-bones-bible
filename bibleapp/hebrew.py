@@ -124,34 +124,52 @@ class Hebrew(object):
         'tsF': 'f-tsadi',
     }
     _CONS_TRANSLIT = {
-        ('aleph',): "'",
-        ('bet', 'dagesh'): 'b',
+        ('aleph',): "\u2018",
         ('bet',): 'v',
         ('gimmel',): 'g',
-        ('dalet', 'dagesh'): 'd',
-        ('dalet',): 'th',   # d
+        ('dalet',): 'd',
         ('heh',): 'h',
-        ('vav',): 'w',  # v
+        ('vav',): 'w',
         ('zayin',): 'z',
         ('het',): 'ch',
         ('tet',): 't',
         ('yud',): 'y',
-        ('kaf', 'dagesh'): 'k',
         ('kaf',): 'kh',
         ('lamed',): 'l',
         ('mem',): 'm',
         ('nun',): 'n',
         ('samekh',): 's',
-        ('ayin',): "`",
-        ('peh', 'dagesh'): 'p',
+        ('ayin',): '\u2019',  #"\u0294",
         ('peh',): 'ph',
         ('tsadi',): 'ts',
         ('qof',): 'q',
         ('resh',): 'r',
         ('shin', 'shin-dot'): 'sh',
         ('shin', 'sin-dot'): 's',
-        ('tav', 'dagesh'): 't',
         ('tav',): 'th',  # t
+
+        ('bet', 'dagesh'): 'B',  # b
+        ('gimmel', 'dagesh'): 'G',
+        ('dalet', 'dagesh'): 'D',  # d
+        ('heh', 'dagesh'): 'H',
+        ('vav', 'dagesh'): 'u',
+        ('zayin', 'dagesh'): 'Z',
+        ('het', 'dagesh'): 'Ch',
+        ('tet', 'dagesh'): 'T',
+        ('yud', 'dagesh'): 'Y',
+        ('kaf', 'dagesh'): 'K',  # k
+        ('lamed', 'dagesh'): 'L',
+        ('mem', 'dagesh'): 'M',
+        ('nun', 'dagesh'): 'N',
+        ('samekh', 'dagesh'): 'S',
+        ('ayin', 'dagesh'): '\u2019',  #"\u0294",
+        ('peh', 'dagesh'): 'P',  # p
+        ('tsadi', 'dagesh'): 'Ts',
+        ('qof', 'dagesh'): 'Q',
+        ('resh', 'dagesh'): 'R',
+        ('shin', 'shin-dot', 'dagesh'): 'Sh',
+        ('shin', 'sin-dot', 'dagesh'): 'S',
+        ('tav', 'dagesh'): 'T',  # t
 
         ('f-kaf', 'dagesh'): 'kh',
         ('f-kaf',): 'kh',
@@ -163,9 +181,9 @@ class Hebrew(object):
     }
     _VOWEL_TRANSLIT = {
         ('sheva',): "'",
-        ('hataf-segol',): 'i',  # half
+        ('hataf-segol',): 'e',  # half
         ('hataf-patah',): 'a',  # half
-        ('hataf-qamats',): 'u',  # half
+        ('hataf-qamats',): 'o',  # half
         ('hireq',): 'i',  # short
         ('tsere',): 'e',  # long
         ('segol',): 'e',  # short
@@ -173,7 +191,7 @@ class Hebrew(object):
         ('qamats',): 'a',  # long
         ('holam',): 'o',  # long
         ('holam-haser',): 'o',  # long
-        ('qubuts',): 'oo',  # long
+        ('qubuts',): 'u',  # long
     }
     _PUNC_TRANSLIT = {
         ('maqaf',): '-',
@@ -195,7 +213,12 @@ class Hebrew(object):
         #for clump in self._iter_clumps(phrase):
         #    print('(' + ')('.join([self._IMAP.get(c, c) for c in clump]) + ')')
         #    print(self._tlit(clump))
-        tlit = ''.join([self._tlit(clump) for clump in self._iter_clumps(phrase)]).replace("''", "'")
+        tlit = ''.join([self._tlit(clump) for clump in self._iter_clumps(phrase)])
+        tlit = tlit.replace("''", "'")
+        tlit = tlit.replace(" '", " ")
+        tlit = tlit.replace('iy', 'i')
+        tlit = tlit.replace('ay ', 'ai ')
+        tlit = tlit.replace('wo', 'o')
         return ' '.join(tlit.split()[::-1]) if reverse else tlit
 
     def _tlit(self, clump):

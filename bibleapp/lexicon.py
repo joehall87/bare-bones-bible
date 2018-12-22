@@ -30,8 +30,6 @@ class Lexicon(object):
 		# 1. Google translate
 		trans = entry['trans']
 		root = entry.get('root')
-		if trans == 'The sky':
-			print(root)
 		if root:
 			entry = self.map.get(root)
 		if trans and root:

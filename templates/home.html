@@ -6,14 +6,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="static/style.css">
+  <link href="https://fonts.googleapis.com/css?family=David+Libre" rel="stylesheet">
   <style>
     /* Word highlighting */
-    .word-highlighting {
-      color: black;
-      font-size: 100%;
-      text-decoration: none;
+    .hebrew {
     }
-    .word-highlighting a:hover {
+    .hebrew a {
+      /* See https://fonts.google.com/?subset=hebrew for other options */
+      /*font-family: Arimo, sans-serif;*/
+      /*font-family: 'Frank Ruhl Libre', serif;*/
+      font-family: 'David Libre', serif;
+      font-size: 150%;
+      color: black;
+      text-decoration: none;  /* Avoid underline on hover */
+    }
+    .hebrew a:hover {
       text-shadow: 2px 2px 10px #00FF00;
       /*background: #FFFF00;*/
     }
@@ -101,12 +108,11 @@
       <div class="col-md-6">
         <div class="text-right">
           <bdo dir=rtl>
-            <p class="word-highlighting">
+            <p class="hebrew">
               <strong>{{verse.num}}</strong> 
               {% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{token.word}}">{{token.word}}</a>{{token.space}}{% endfor %}
             </p>
             <p>
-              <strong>{{verse.num}}</strong> 
               <em>{{verse.transliteration}}</em>
             </p>
           </bdo>
@@ -120,7 +126,9 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="{{token.id}}-label">{{token.word}} [{{token.transliteration}}]</h5>
+            <h5 class="modal-title hebrew" id="{{token.id}}-label">
+              {{token.word}} [{{token.transliteration}}]
+            </h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
