@@ -139,7 +139,7 @@ class Hebrew(object):
         ('mem',): 'm',
         ('nun',): 'n',
         ('samekh',): 's',
-        ('ayin',): '\u2019',  #"\u0294",
+        ('ayin',): '\u00B7',   #'\u2019',  #"\u0294",
         ('peh',): 'ph',
         ('tsadi',): 'ts',
         ('qof',): 'q',
@@ -196,7 +196,7 @@ class Hebrew(object):
     _PUNC_TRANSLIT = {
         ('maqaf',): '-',
         ('paseq',): '|',
-        ('sof-pasuq',): '',
+        ('sof-pasuq',): ':',
         ('nun-hafukha',): '',
     }
     _TRANSLIT_SUBS = [

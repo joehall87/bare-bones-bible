@@ -111,7 +111,6 @@ class Tanakh():
 			code  = match.group(1)
 			start = int(match.group(2)), 0
 			end   = int(match.group(3)), 999
-		print(code, start, end)
 		return self.get_book(code), start, end
 
 
@@ -211,10 +210,10 @@ class Verse(object):
 			for word in parts:  # Remove cantillations
 				space = ' '
 				if word == '\u05C0':
-					self._he_tokens[-1].space += '\u05C0 '
+					self._he_tokens[-1].word_space += '\u05C0 '
 					continue
 				elif word[0] in {'[', '(', '<'}:
-					self._he_tokens[-1].space += ' ' + word[0]
+					self._he_tokens[-1].word_space += ' ' + word[0]
 					word = word[1:]
 
 				elif word[-1] in {'\u05C3', ']', ')', '>'}:
@@ -233,10 +232,19 @@ class Token(object):
 	"""Token wrapper."""
 	def __init__(self, word, space=None, lexicon=None):
 		self.word = word
+		self.word_space = space
 		self.word_no_vowels = re.sub('[^{}]'.format(_CHARACTERS), '', self.word)
-		self.space = space
-		self.transliteration = _HEBREW.transliterate(word)
 		self.lexicon = lexicon
+
+	@property
+	def tlit(self):
+		"""Transliteration."""
+		return _HEBREW.transliterate(self.word)
+	
+	@property
+	def tlit_space(self):
+		"""Transliteration of space."""
+		return _HEBREW.transliterate(self.word_space)
 
 	@property
 	def description(self):
