@@ -10,7 +10,7 @@ from google.cloud import translate
 from bibleapp.book import Tanakh
 
 
-OPENSCRIPTURES_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'resources', 'openscriptures')
+LEXICON_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'resources', 'lexicon')
 
 
 def run():
@@ -22,7 +22,7 @@ def run():
 	"""
 	print('1. Load what we already have')
 	translations = {}
-	json_path = os.path.join(OPENSCRIPTURES_DIR, 'GoogleTranslations.json')
+	json_path = os.path.join(LEXICON_DIR, 'GoogleTranslations.json')
 	if os.path.exists(json_path):
 		with open(json_path, 'r') as f:
 			translations = json.load(f)
@@ -40,7 +40,7 @@ def run():
 							words.add(w[i:j])
 
 	print('3. Fetch all words available in Strongs')
-	with open(os.path.join(OPENSCRIPTURES_DIR, 'LexicalIndex.xml'), 'r') as f:
+	with open(os.path.join(LEXICON_DIR, 'LexicalIndex.xml'), 'r') as f:
 		index = bs4.BeautifulSoup(f.read(), 'html.parser')
 	for entry in index.find_all('entry'):
 		w = re.sub('[^\u05D0-\u05EA]', '', entry.find('w').contents[0])

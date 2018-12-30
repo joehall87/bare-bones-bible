@@ -151,7 +151,7 @@ class Book(object):
 				blobs[lan] = json.load(f)
 		for c, (en_chapter, he_chapter) in enumerate(zip(blobs['en']['text'], blobs['he']['text']), start=1):
 			for v, (en_verse, he_verse) in enumerate(zip(en_chapter, he_chapter), start=1):
-				content.append((c, Verse(v, en_verse, he_verse, lexicon=self.lexicon)))
+				content.append((c, Verse(self, c, v, en_verse, he_verse)))
 		return content
 
 	def is_match(self, alias):
@@ -169,7 +169,7 @@ class Book(object):
 		cv_end = cv_end or (999,999)
 		chapter, verses = 0, []
 		for c, verse in self.content:
-			if cv_start <= (c, verse.num) <= cv_end:
+			if cv_start <= (c, verse.v) <= cv_end:
 				if c != chapter:
 					if verses:
 						yield chapter, verses
@@ -191,15 +191,22 @@ class Book(object):
 
 class Verse(object):
 	"""Verse wrapper."""
-	def __init__(self, num, english, hebrew, lexicon=None):
-		self.num = num
+	def __init__(self, book, c, v, english, hebrew):
+		self.book = book
+		self.c = c
+		self.v = v
 		self.english = english
 		for alias in ['the Lord', 'The Lord', 'the LORD', 'The LORD']:
 			self.english = self.english.replace(alias, 'Yahweh')
 		self.hebrew = hebrew
 		self.transliteration = _HEBREW.transliterate(hebrew)
-		self.lexicon = lexicon
 		self._he_tokens = None
+
+	@property
+	def bible_hub_url(self):
+		"""The bible-hub url."""
+		return "https://biblehub.com/lexicon/{b}/{c}-{v}.htm".format(
+			b=self.book.name.replace(' ', '_').lower(), c=self.c, v=self.v)
 
 	@property
 	def he_tokens(self):
@@ -212,19 +219,20 @@ class Verse(object):
 				if word == '\u05C0':
 					self._he_tokens[-1].word_space += '\u05C0 '
 					continue
-				elif word[0] in {'[', '(', '<'}:
+
+				if word[0] in {'[', '(', '<'}:
 					self._he_tokens[-1].word_space += ' ' + word[0]
 					word = word[1:]
 
-				elif word[-1] in {'\u05C3', ']', ')', '>'}:
+				if word[-1] in {'\u05C3', ']', ')', '>'}:
 					word, space = word[:-1], word[-1] + ' '
 
 				if '\u05BE' in word:
 					parts = word.split('\u05BE')
-					self._he_tokens.extend([Token(part, '\u05BE', lexicon=self.lexicon) for part in parts[:-1]])
-					self._he_tokens.extend([Token(parts[-1], space, lexicon=self.lexicon)])
+					self._he_tokens.extend([Token(part, '\u05BE', lexicon=self.book.lexicon) for part in parts[:-1]])
+					self._he_tokens.extend([Token(parts[-1], space, lexicon=self.book.lexicon)])
 				else:
-					self._he_tokens.append(Token(word, space, lexicon=self.lexicon))
+					self._he_tokens.append(Token(word, space, lexicon=self.book.lexicon))
 		return self._he_tokens	
 
 

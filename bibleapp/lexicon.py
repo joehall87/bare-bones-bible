@@ -16,7 +16,7 @@ class Lexicon(object):
 	@property
 	def map(self):
 		if self._map is None:
-			path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'resources', 'openscriptures', 'CustomHebrewLexicon.json')
+			path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'resources', 'lexicon', 'CustomHebrewLexicon.json')
 			with open(path, 'r') as f:
 				self._map = json.load(f)
 		return self._map

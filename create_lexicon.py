@@ -10,7 +10,7 @@ from bibleapp.book import Tanakh
 
 
 # Need to put HebrewStrong.xml and LexicalIndex.xml from https://github.com/openscriptures/HebrewLexicon into this dir:
-OPENSCRIPTURES_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'resources', 'openscriptures')
+LEXICON_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'resources', 'lexicon')
 
 
 PREFIXES = ['and', 'as', 'at', 'for', 'from', 'in', 'like', 'on', 'the', 'to', 'when', 'will', 'with', 'you will']
@@ -52,7 +52,7 @@ def run():
         entry['variants'] = sorted(entry['variants'])
 
     print('4. Persist')
-    with open(os.path.join(OPENSCRIPTURES_DIR, 'CustomHebrewLexicon.json'), 'w') as f:
+    with open(os.path.join(LEXICON_DIR, 'CustomHebrewLexicon.json'), 'w') as f:
         json.dump(lexicon, f)
 
 
@@ -70,12 +70,12 @@ def _find_root(w, translations):
 
 
 def _load_translations():
-    with open(os.path.join(OPENSCRIPTURES_DIR, 'GoogleTranslations.json'), 'r') as f:
+    with open(os.path.join(LEXICON_DIR, 'GoogleTranslations.json'), 'r') as f:
         return json.load(f)
 
 
 def _load_strongs():
-    with open(os.path.join(OPENSCRIPTURES_DIR, 'HebrewStrong.xml'), 'r') as f:
+    with open(os.path.join(LEXICON_DIR, 'HebrewStrong.xml'), 'r') as f:
         strongs_xml = bs4.BeautifulSoup(f.read(), 'html.parser')
     strongs = defaultdict(list)
     for x in strongs_xml.find_all('entry'):

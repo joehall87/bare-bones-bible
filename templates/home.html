@@ -11,7 +11,7 @@
     /* Word highlighting */
     .hebrew {
       font-family: 'David Libre', serif;
-      font-size: 150%;
+      font-size: 180%;
     }
     .hebrew a {
       /* See https://fonts.google.com/?subset=hebrew for other options */
@@ -22,7 +22,6 @@
     }
     .hebrew a:hover {
       text-shadow: 2px 2px 10px #00FF00;
-      /*background: #FFFF00;*/
     }
     /* Transliteration */
     .translit {
@@ -110,18 +109,12 @@
     </div>
     {% for verse in verses %}
     <div class="row">
-      <!-- English -->
-      <div class="col-md-6">
-        <p>
-          <strong>{{verse.num}}</strong> {{ verse.english }}
-        </p>
-      </div>
       <!-- Hebrew -->
       <div class="col-md-6">
         <div class="text-right">
           <bdo dir=rtl>
             <p>
-              <strong>{{verse.num}}</strong> 
+              <strong><a href="{{verse.bible_hub_url}}" target="_blank">{{verse.v}}</a></strong> 
               <span class="hebrew">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{token.word}}">{{token.word}}</a>{{token.word_space}}{% endfor %}</span>
             </p>
           </bdo>
@@ -129,6 +122,13 @@
             <span class="translit">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{token.word}}">{{token.tlit}}</a>{{token.tlit_space}}{% endfor %}</span>
           </p>
         </div>
+      </div>
+      <!-- English -->
+      <div class="col-md-6">
+        <p>
+          <!--<strong><a href="{{verse.bible_hub_url}}" target="_blank">{{verse.v}}</a></strong> -->
+          {{ verse.english }}
+        </p>
       </div>
     </div>
     {% endfor %}

@@ -32,19 +32,38 @@ body {
 }
 .scrollable-menu {
   height: auto;
-  max-height: 600px;
+  max-height: 400px;
   overflow-x: hidden;
 }
 /* Word highlighting */
-.word-highlighting a {
-  color: black;
-  font-size: 120%;
-  /*text-decoration: none;*/
+.hebrew {
+  font-family: 'David Libre', serif;
+  font-size: 180%;
 }
-.word-highlighting a:hover {
+.hebrew a {
+  /* See https://fonts.google.com/?subset=hebrew for other options */
+  /*font-family: Arimo, sans-serif;*/
+  /*font-family: 'Frank Ruhl Libre', serif;*/
+  color: black;
+  text-decoration: none;  /* Avoid underline on hover */
+}
+.hebrew a:hover {
   text-shadow: 2px 2px 10px #00FF00;
   /*background: #FFFF00;*/
 }
+/* Transliteration */
+.translit {
+  font-size: 85%;
+  font-style: italic;
+}
+.translit a {
+  color: black;
+  text-decoration: none;  /* Avoid underline on hover */
+}
+.translit a:hover {
+  text-shadow: 2px 2px 10px #00FF00;
+}
+/* Chapter button */
 .chapter-button {
   width: 60px;
 }
