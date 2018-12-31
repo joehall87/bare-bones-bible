@@ -25,23 +25,55 @@ def home():
 def book():
     """Show book."""
     tanakh = Tanakh()
-    print(request.args['book'])
-    book = tanakh.get_book(request.args['book'])
-    if 'chapter' in request.args:
-        c = int(request.args['chapter'])
-        start, end = (c, 0), (c, 999)
+    print(request.args['name'])
+    book = tanakh.get_book(request.args['name'])
+    chapter = request.args.get('chapter')
+    kw = {'book': book, 'dropdown': tanakh.get_dropdown()}
+    if not chapter:
+        return render_template('home.html', page='chapter-select', title=book.name, **kw)
     else:
-        start, end = None, None
-    return render_template('home.html', page='book', dropdown=tanakh.get_dropdown(), book=book, cv_start=start, cv_end=end)
+        c = int(chapter)
+        title = '{} {}'.format(book.name, c)
+        verses = list(book.iter_verses((c, None), (c, None)))
+        tokens = list(book.iter_unique_he_tokens((c, None), (c, None)))
+        return render_template('home.html', page='chapter', title=title, verses=verses, tokens=tokens, **kw)
 
 
 @app.route('/search')
 def search():
     """Search for a range of text."""
     tanakh = Tanakh()
-    passage_str = request.args['passage'].strip()
-    book, start, end = tanakh.get_passage(passage_str)
-    return render_template('home.html', page='book', dropdown=tanakh.get_dropdown(), book=book, cv_start=start, cv_end=end)
+    search_str = request.args['text'].strip()
+    passage = tanakh.get_passage(search_str)
+    if passage:
+        book, start, end = passage
+        title = _pretty_passage(book, start, end)
+        verses = list(book.iter_verses(start, end))
+        tokens = list(book.iter_unique_he_tokens(start, end))
+        kw = {'book': book, 'title': title, 'verses': verses, 'tokens': tokens, 'dropdown': tanakh.get_dropdown()}
+        if start[0] == end[0] and start[1] is None and end[1] is None:
+            return render_template('home.html', page='chapter', **kw)
+        else:
+            return render_template('home.html', page='search-result', **kw)
+    return 'Nooooo!'
+
+
+def _pretty_passage(book, start, end):
+    passage = book.name + ' '
+    c1, v1 = start
+    c2, v2 = end
+    style = 'style="font-size: 75%"'
+    if c1 == c2:
+        passage += str(c1)
+        if v1 and v2 and v1 == v2:
+            passage += '<span {}>:{}</span>'.format(style, v1)
+        elif v1 < v2:
+            passage += '<span {}>:{}-{}</span>'.format(style, v1, v2)
+    elif v1 and v2:
+        passage += '{}<span {}>:{}</span>-{}<span {}>:{}</span>'.format(c1, style, v1, c2, style, v2)
+    else:
+        passage += '{}-{}'.format(c1, c2)
+    return passage
 
 
 if __name__ == '__main__':

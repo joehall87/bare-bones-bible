@@ -61,7 +61,7 @@ class Lexicon(object):
 	@staticmethod
 	def _make_ref_link(ref):
 		pretty_ref = '{} {}:{}'.format(ref[0].title(), ref[1], ref[2])
-		href = "/search?{}".format(urllib.parse.urlencode({'passage': pretty_ref}))
+		href = "/search?{}".format(urllib.parse.urlencode({'text': pretty_ref}))
 		return '<a href="{href}">{ref}</a>'.format(ref=pretty_ref, href=href)
 
 

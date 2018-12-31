@@ -68,7 +68,7 @@ class Tanakh():
 				prev_collection = book.collection
 				dropdown.append(('div', 'divider', '', ''))
 				dropdown.append(('h5', 'header', book.collection, ''))
-			dropdown.append(('a', 'item', book.name, 'href=/book?book={}'.format(book.code)))
+			dropdown.append(('a', 'item', book.name, 'href=/book?name={}'.format(book.name)))
 		return dropdown[1:]
 
 	def get_book(self, alias):
@@ -77,37 +77,39 @@ class Tanakh():
 
 	def get_passage(self, passage_str):
 		"""Return the matching (book, cv_start, cv_end) tuple."""
+		name = None
 		# Case 1: "book c1:v1 - c2:v2"
 		match = re.match('^([\w\s]+)\s+(\d+)\:(\d+)\s*-\s*(\d+):(\d+)$', passage_str)
 		if match:
-			code  = match.group(1)
+			name  = match.group(1)
 			start = int(match.group(2)), int(match.group(3))
 			end   = int(match.group(4)), int(match.group(5))
 		# Case 2: "book c1:v1 - v2"
 		match = re.match('^([\w\s]+)\s+(\d+)\:(\d+)\s*-\s*(\d+)$', passage_str)
 		if match:
-			code  = match.group(1)
+			name  = match.group(1)
 			start = int(match.group(2)), int(match.group(3))
 			end   = int(match.group(2)), int(match.group(4))
 		# Case 3: "book c1:v1"
 		match = re.match('^([\w\s]+)\s+(\d+)\:(\d+)$', passage_str)
 		if match:
-			code  = match.group(1)
+			name  = match.group(1)
 			start = int(match.group(2)), int(match.group(3))
 			end   = start
 		# Case 4: "book c1"
 		match = re.match('^([\w\s]+)\s+(\d+)$', passage_str)						  
 		if match:
-			code  = match.group(1)
-			start = int(match.group(2)), 0
-			end   = int(match.group(2)), 999
+			name  = match.group(1)
+			start = int(match.group(2)), None
+			end   = int(match.group(2)), None
 		# Case 5: "book c1 - c2"
 		match = re.match('^([\w\s]+)\s+(\d+)\s*-\s*(\d+)$', passage_str)
 		if match:
-			code  = match.group(1)
-			start = int(match.group(2)), 0
-			end   = int(match.group(3)), 999
-		return self.get_book(code), start, end
+			name  = match.group(1)
+			start = int(match.group(2)), None
+			end   = int(match.group(3)), None
+		if name:
+			return self.get_book(name), start, end
 
 
 class Book(object):
@@ -116,17 +118,18 @@ class Book(object):
 	def __init__(self, collection, name, lexicon=None):
 		self.collection = collection
 		self.name = name
+		self.he_name = None
 		self.lexicon = lexicon
 		name = name.replace(' ', '').lower()
 		if name[0].isdigit():
 			num = name[0]
 			name = name[1:]
-			self.code = num + name[:3]
+			self.ref = num + self.name[:3]
 			self._aliases = set([num + name, name + num])
 			self._aliases |= set(num + name[:i] for i in range(2, 6))
 			self._aliases |= set(name[:i] + num for i in range(2, 6))
 		else:
-			self.code = name.lower()[:3]
+			self.ref = self.name[:3]
 			self._aliases = set([name])
 			self._aliases |= set(name[:i].lower() for i in range(2, 6))
 		self._content = None
@@ -145,6 +148,7 @@ class Book(object):
 			path = os.path.join(_RESOURCES_DIR, 'sefaria', '{}.{}.json'.format(self.name, lan))
 			with open(path, 'r') as f:
 				blobs[lan] = json.load(f)
+		self.he_name = blobs['he']['heTitle']
 		for c, (en_chapter, he_chapter) in enumerate(zip(blobs['en']['text'], blobs['he']['text']), start=1):
 			for v, (en_verse, he_verse) in enumerate(zip(en_chapter, he_chapter), start=1):
 				content.append((c, Verse(self, c, v, en_verse, he_verse)))
@@ -159,30 +163,24 @@ class Book(object):
 		"""Num chapters in book."""
 		return self.content[-1][0]
 
-	def iter_verses_by_chapter(self, cv_start=None, cv_end=None):
+	def iter_verses(self, cv_start=None, cv_end=None):
 		"""Iterate over verses"""
-		cv_start = cv_start or (0,0)
-		cv_end = cv_end or (999,999)
-		chapter, verses = 0, []
+		c1 = 0 if not cv_start or not cv_start[0] else cv_start[0]
+		v1 = 0 if not cv_start or not cv_start[1] else cv_start[1]
+		c2 = 999 if not cv_end or not cv_end[0] else cv_end[0]
+		v2 = 999 if not cv_end or not cv_end[1] else cv_end[1]
 		for c, verse in self.content:
-			if cv_start <= (c, verse.v) <= cv_end:
-				if c != chapter:
-					if verses:
-						yield chapter, verses
-					chapter, verses = c, []
-				verses.append(verse)
-		if verses:
-			yield chapter, verses
+			if (c1, v1) <= (c, verse.v) <= (c2, v2):
+				yield verse
 
 	def iter_unique_he_tokens(self, cv_start=None, cv_end=None):
 		"""Iterate over unique tokens."""
 		used = set()
-		for chapter, verses in self.iter_verses_by_chapter(cv_start, cv_end):
-			for verse in verses:
-				for token in verse.he_tokens:
-					if token.word not in used:
-						yield token
-						used.add(token.word)
+		for verse in self.iter_verses(cv_start, cv_end):
+			for token in verse.he_tokens:
+				if token.word not in used:
+					yield token
+					used.add(token.word)
 
 
 class Verse(object):
@@ -197,6 +195,11 @@ class Verse(object):
 		self.hebrew = hebrew
 		self.transliteration = _HEBREW.transliterate(hebrew)
 		self._he_tokens = None
+
+	@property
+	def ref(self):
+		"""Pretty reference."""
+		return '{} {}:{}'.format(self.book.ref, self.c, self.v)
 
 	@property
 	def bible_hub_url(self):
