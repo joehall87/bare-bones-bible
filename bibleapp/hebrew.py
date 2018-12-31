@@ -250,18 +250,19 @@ class Hebrew(object):
         return clump if tlit is None else tlit
 
     def _iter_clumps(self, phrase):
-        clump = phrase[0]
-        ignore = {self._NIQQUD[i] for i in ['meteg', 'rafe', 'upper-dot', 'lower-dot']}
-        accents = set(self._CANTILLATIONS.values()) | set(self._NIQQUD.values())
-        for i, c in enumerate(phrase[1:]):
-            if c in ignore:
-                continue
-            if c in accents:
-                clump += c
-            else:
-                yield clump
-                clump = c
-        yield clump
+        if phrase:
+            clump = phrase[0]
+            ignore = {self._NIQQUD[i] for i in ['meteg', 'rafe', 'upper-dot', 'lower-dot']}
+            accents = set(self._CANTILLATIONS.values()) | set(self._NIQQUD.values())
+            for i, c in enumerate(phrase[1:]):
+                if c in ignore:
+                    continue
+                if c in accents:
+                    clump += c
+                else:
+                    yield clump
+                    clump = c
+            yield clump
 
     #def __getattr__(self, item):
     #    return self._MAP.get(item, self._MAP.get(self._ALIASES.get(item)))
