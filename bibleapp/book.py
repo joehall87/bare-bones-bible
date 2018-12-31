@@ -17,7 +17,11 @@ class Tanakh():
 	"""Wrapper around all books in Tanakh."""
 	def __init__(self):
 		self.lexicon = Lexicon()
-		self.books = [Book(collection, name, lexicon=self.lexicon) for collection, name in [
+
+	@property
+	def books(self):
+		"""Return all books."""
+		return [Book(collection, name, lexicon=self.lexicon) for collection, name in [
 			('Torah', 'Genesis'),
 			('Torah', 'Exodus'),
 			('Torah', 'Leviticus'),
@@ -85,6 +89,7 @@ class Tanakh():
 				if num:
 					occurrences += num
 					verses.append(verse)
+			del book
 		return occurrences, verses
 
 	def get_passage(self, passage_str):
