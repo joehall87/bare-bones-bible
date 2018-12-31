@@ -75,6 +75,18 @@ class Tanakh():
 		"""Get a specific book."""
 		return [book for book in self.books if book.is_match(alias)][0]
 
+	def search(self, search_str, use='en'):
+		"""Find a word or phrase."""
+		occurrences, verses = 0, []
+		search_re = re.compile('({})'.format(search_str.replace('*', '\S*')), flags=re.IGNORECASE)
+		for book in self.books:
+			for verse in book.iter_verses():
+				num = verse.search(search_re, use=use)
+				if num:
+					occurrences += num
+					verses.append(verse)
+		return occurrences, verses
+
 	def get_passage(self, passage_str):
 		"""Return the matching (book, cv_start, cv_end) tuple."""
 		name = None
@@ -124,7 +136,7 @@ class Book(object):
 		if name[0].isdigit():
 			num = name[0]
 			name = name[1:]
-			self.ref = num + self.name[:3]
+			self.ref = num + name.title()[:3]
 			self._aliases = set([num + name, name + num])
 			self._aliases |= set(num + name[:i] for i in range(2, 6))
 			self._aliases |= set(name[:i] + num for i in range(2, 6))
@@ -151,7 +163,7 @@ class Book(object):
 		self.he_name = blobs['he']['heTitle']
 		for c, (en_chapter, he_chapter) in enumerate(zip(blobs['en']['text'], blobs['he']['text']), start=1):
 			for v, (en_verse, he_verse) in enumerate(zip(en_chapter, he_chapter), start=1):
-				content.append((c, Verse(self, c, v, en_verse, he_verse)))
+				content.append(Verse(self, c, v, en_verse, he_verse))
 		return content
 
 	def is_match(self, alias):
@@ -161,7 +173,7 @@ class Book(object):
 	@property
 	def num_chapters(self):
 		"""Num chapters in book."""
-		return self.content[-1][0]
+		return self.content[-1].c
 
 	def iter_verses(self, cv_start=None, cv_end=None):
 		"""Iterate over verses"""
@@ -169,18 +181,9 @@ class Book(object):
 		v1 = 0 if not cv_start or not cv_start[1] else cv_start[1]
 		c2 = 999 if not cv_end or not cv_end[0] else cv_end[0]
 		v2 = 999 if not cv_end or not cv_end[1] else cv_end[1]
-		for c, verse in self.content:
-			if (c1, v1) <= (c, verse.v) <= (c2, v2):
+		for verse in self.content:
+			if (c1, v1) <= (verse.c, verse.v) <= (c2, v2):
 				yield verse
-
-	def iter_unique_he_tokens(self, cv_start=None, cv_end=None):
-		"""Iterate over unique tokens."""
-		used = set()
-		for verse in self.iter_verses(cv_start, cv_end):
-			for token in verse.he_tokens:
-				if token.word not in used:
-					yield token
-					used.add(token.word)
 
 
 class Verse(object):
@@ -206,6 +209,19 @@ class Verse(object):
 		"""The bible-hub url."""
 		return "https://biblehub.com/lexicon/{b}/{c}-{v}.htm".format(
 			b=self.book.name.replace(' ', '_').lower(), c=self.c, v=self.v)
+
+	def search(self, search_str, use='en'):
+		"""Search for an english or transliterated word/phrase."""
+		search_re = search_str
+		if isinstance(search_str, str):
+			search_re = re.compile('({})'.format(search_str.replace('*', '\S*')), flags=re.IGNORECASE)
+		if use == 'en':
+			num = len(search_re.findall(self.english))
+			if num:
+				self.english = search_re.sub('<span class="highlight">\g<1></span>', self.english)
+		elif use == 'tlit':
+			pass  # TODO: Figure this out!!
+		return num
 
 	@property
 	def he_tokens(self):

@@ -43,19 +43,29 @@ def book():
 def search():
     """Search for a range of text."""
     tanakh = Tanakh()
+    kw = {'dropdown': tanakh.get_dropdown()}
     search_str = request.args['text'].strip()
+
+    # 1. Passage
     passage = tanakh.get_passage(search_str)
     if passage:
         book, start, end = passage
         title = _pretty_passage(book, start, end)
         verses = list(book.iter_verses(start, end))
-        tokens = list(book.iter_unique_he_tokens(start, end))
-        kw = {'book': book, 'title': title, 'verses': verses, 'tokens': tokens, 'dropdown': tanakh.get_dropdown()}
+        tokens = _find_unique_tokens(verses)
+        kw.update({'title': title, 'verses': verses, 'tokens': tokens})
         if start[0] == end[0] and start[1] is None and end[1] is None:
             return render_template('home.html', page='chapter', **kw)
         else:
             return render_template('home.html', page='search-result', **kw)
-    return 'Nooooo!'
+
+    # 2. English or tlit phrase
+    occurrences, verses = tanakh.search(search_str, use='en')
+    #if not occurrences:
+    #    occurrences, verses = tanakh.search(search_str, use='tlit')
+    title = '{} <span style="font-size: 75%">occurrences of <span class="highlight">{}</span></span>'.format(occurrences, search_str)
+    tokens = _find_unique_tokens(verses)
+    return render_template('home.html', page='search-result', title=title, verses=verses, tokens=tokens, **kw)
 
 
 def _pretty_passage(book, start, end):
@@ -74,6 +84,16 @@ def _pretty_passage(book, start, end):
     else:
         passage += '{}-{}'.format(c1, c2)
     return passage
+
+
+def _find_unique_tokens(verses):
+    tokens, used = [], set()
+    for verse in verses:
+        for token in verse.he_tokens:
+            if token.word not in used:
+                tokens.append(token)
+                used.add(token.word)
+    return tokens
 
 
 if __name__ == '__main__':

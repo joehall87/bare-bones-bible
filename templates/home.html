@@ -8,7 +8,7 @@
   <link rel="stylesheet" type="text/css" href="static/style.css">
   <link href="https://fonts.googleapis.com/css?family=David+Libre" rel="stylesheet">
   <style>
-    /* Word highlighting */
+    /* Hebrew highlighting */
     .hebrew {
       font-family: 'David Libre', serif;
       font-size: 180%;
@@ -34,6 +34,11 @@
     }
     .translit a:hover {
       text-shadow: 2px 2px 10px #00FF00;
+    }
+    /* Search-result highlighting */
+    .highlight {
+      color: red;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -124,7 +129,7 @@
       </div>
       <!-- English -->
       <div class="col-lg-6">
-        <p>{{ verse.english }}</p>
+        <p>{{ verse.english | safe }}</p>
       </div>
     </div>
     {% endfor %}
