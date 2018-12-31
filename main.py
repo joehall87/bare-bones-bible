@@ -35,7 +35,7 @@ def book():
         c = int(chapter)
         title = '{} {}'.format(book.name, c)
         verses = list(book.iter_verses((c, None), (c, None)))
-        tokens = list(book.iter_unique_he_tokens((c, None), (c, None)))
+        tokens = _find_unique_tokens(verses)
         return render_template('home.html', page='chapter', title=title, verses=verses, tokens=tokens, **kw)
 
 

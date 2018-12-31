@@ -89,7 +89,6 @@ class Tanakh():
 				if num:
 					occurrences += num
 					verses.append(verse)
-			del book
 		return occurrences, verses
 
 	def get_passage(self, passage_str):
