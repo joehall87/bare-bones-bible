@@ -2,6 +2,7 @@ import re
 
 
 class Hebrew(object):
+    _CANTILLATIONS_RE = re.compile('[\u0591-\u05AF]')
     _CANTILLATIONS = {
         'etnahta': '\u0591',
         'segol-acc': '\u0592',  # To avoid clash with the niqqud segol
@@ -35,6 +36,7 @@ class Hebrew(object):
         'zinor': '\u05AE',
         'masora-circle': '\u05AF',
     }
+    _NIQQUD_RE = re.compile('[\u05B0-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7]')
     _NIQQUD = {
         'sheva': '\u05B0',
         'hataf-segol': '\u05B1',
@@ -220,12 +222,21 @@ class Hebrew(object):
         self._v_tmap = {''.join([self._MAP[i] for i in k]): v for k, v in self._VOWEL_TRANSLIT.items()}
         self._p_tmap = {''.join([self._MAP[i] for i in k]): v for k, v in self._PUNC_TRANSLIT.items()}
 
+    def strip_cantillations(self, phrase):
+        """Strip all cantillations."""
+        return self._CANTILLATIONS_RE.sub('', phrase)
+
+    def strip_niqqud(self, phrase):
+        """Strip all niqqud."""
+        return self._NIQQUD_RE.sub('', phrase)
+
     def transliterate(self, phrase, reverse=False):
         """Transliterate to english."""
         tlit = ''.join([self._tlit(clump) for clump in self._iter_clumps(phrase)])
         for seq, sub in self._TRANSLIT_SUBS:
             tlit = re.sub(seq, sub, tlit)
-        return ' '.join(tlit.split()[::-1]) if reverse else tlit
+        tlit = ' '.join(tlit.split()[::-1]) if reverse else tlit
+        return tlit.lower()   # <- lower looks a bit nicer
 
     def _tlit(self, clump):
         tlit = None

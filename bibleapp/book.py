@@ -8,10 +8,6 @@ from .lexicon import Lexicon
 
 
 _RESOURCES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'resources')
-_CHARACTERS = '\u05D0-\u05EA'
-_VOWELS = '\u05B0-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7'
-_PUNCTUATION = '\u05BE\u05C0\u05C3\u05C6'  # Maqaf (-), Paseq (|), Sof Pasuq (:), Nun Hafukha
-_CANTILLATIONS = '\u0591-\u05AF'
 
 
 _HEBREW = Hebrew()
@@ -213,7 +209,7 @@ class Verse(object):
 		"""Hebrew tokens."""
 		if self._he_tokens is None:
 			self._he_tokens = []
-			parts = re.sub('[{}]'.format(_CANTILLATIONS), '', self.hebrew).split()
+			parts = _HEBREW.strip_cantillations(self.hebrew).split()
 			for word in parts:  # Remove cantillations
 				space = ' '
 				if word == '\u05C0':
@@ -241,7 +237,7 @@ class Token(object):
 	def __init__(self, word, space=None, lexicon=None):
 		self.word = word
 		self.word_space = space
-		self.word_no_vowels = re.sub('[^{}]'.format(_CHARACTERS), '', self.word)
+		self.word_no_vowels = _HEBREW.strip_niqqud(self.word)
 		self.lexicon = lexicon
 
 	@property
