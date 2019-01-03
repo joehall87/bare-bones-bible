@@ -109,15 +109,15 @@
     {% if page == 'chapter' %}
     <div class="row">
       <div class="col-lg-12" align="center">
-        <h1 class="mt-5">{{ book.name }} {{ chapter }}</h1>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-lg-12">
-        <ul class="pagination justify-content-center mt-1">
-          <li class="page-item {% if chapter == 1 %}disabled{% endif %}"><a class="page-link" href="book?name={{ book.name }}&chapter={{ chapter - 1 }}">&laquo;</a></li>
-          <li class="page-item {% if chapter == book.num_chapters %}disabled{% endif %}"><a class="page-link" href="book?name={{ book.name }}&chapter={{ chapter + 1 }}">&raquo;</a></li>
-        </ul>
+        <h1 class="mt-5">
+          {% if chapter > 1 %}
+          <a class="btn btn-outline-primary float-left" href="book?name={{ book.name }}&chapter={{ chapter - 1 }}" role="button">&laquo;</a>
+          {% endif %}
+          {{ book.name }} {{ chapter }}
+          {% if chapter < book.num_chapters %}
+          <a class="btn btn-outline-primary float-right {% if chapter == book.num_chapters %}disabled{% endif %}" href="book?name={{ book.name }}&chapter={{ chapter + 1 }}" role="button">&raquo;</a>
+          {% endif %}
+        </h1>
       </div>
     </div>
     {% else %}
@@ -126,8 +126,8 @@
         <h1 class="mt-5">{{ title | safe }}</h1>
       </div>
     </div>
-    <hr/>
     {% endif %}
+    <hr/>
     {% for verse in verses %}
     <div class="row">
       <!-- Hebrew -->
@@ -152,13 +152,16 @@
     {% endfor %}
     {% if page == 'chapter' %}
     <div class="row">
-      <div class="col-lg-12">
-        <ul class="pagination justify-content-center mt-1">
-          <li class="page-item {% if chapter == 1 %}disabled{% endif %}"><a class="page-link" href="book?name={{ book.name }}&chapter={{ chapter - 1 }}">&laquo;</a></li>
-          <li class="page-item {% if chapter == book.num_chapters %}disabled{% endif %}"><a class="page-link" href="book?name={{ book.name }}&chapter={{ chapter + 1 }}">&raquo;</a></li>
-        </ul>
+      <div class="col-lg-12 mt-3">
+        {% if chapter > 1 %}
+        <a class="btn btn-outline-primary float-left" href="book?name={{ book.name }}&chapter={{ chapter - 1 }}" role="button">&laquo;</a>
+        {% endif %}
+        {% if chapter < book.num_chapters %}
+        <a class="btn btn-outline-primary float-right {% if chapter == book.num_chapters %}disabled{% endif %}" href="book?name={{ book.name }}&chapter={{ chapter + 1 }}" role="button">&raquo;</a>
+        {% endif %}
       </div>
     </div>
+    <div class="row"><div class="col-lg-12 mt-1">&nbsp;</div></div>
     {% endif %}
     {% for token in tokens %}
     <div class="modal fade" id="{{ token.word }}" tabindex="-1" role="dialog" aria-labelledby="{{ token.word }}-label" aria-hidden="true">
