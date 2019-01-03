@@ -92,9 +92,10 @@
   <main role="main" class="container">
     <div class="row">
       <div class="col-lg-12">
-        <h1 class="mt-5">{{book.name}}</h1>
+        <h1 class="mt-5">{{ book.name }}</h1>
       </div>
     </div>
+    <hr/>
     <div class="row">
       <div class="col-lg-12">
       {% for c in range(1, book.num_chapters + 1) %}<a href="book?name={{ book.name }}&chapter={{ c }}" role="button" class="btn btn-outline-dark chapter-button">{{ c }}</a>{% endfor %}
@@ -105,12 +106,28 @@
   <!-- ** Chapter ** -->
   {% elif page in ['chapter', 'search-result'] %}
   <main role="main" class="container">
+    {% if page == 'chapter' %}
     <div class="row">
-      <div class="col-lg-12">
-        <h1 class="mt-5">{{ title | safe }}</h1>
-        <hr/>
+      <div class="col-lg-12" align="center">
+        <h1 class="mt-5">{{ book.name }} {{ chapter }}</h1>
       </div>
     </div>
+    <div class="row">
+      <div class="col-lg-12">
+        <ul class="pagination justify-content-center mt-1">
+          <li class="page-item {% if chapter == 1 %}disabled{% endif %}"><a class="page-link" href="book?name={{ book.name }}&chapter={{ chapter - 1 }}">&laquo;</a></li>
+          <li class="page-item {% if chapter == book.num_chapters %}disabled{% endif %}"><a class="page-link" href="book?name={{ book.name }}&chapter={{ chapter + 1 }}">&raquo;</a></li>
+        </ul>
+      </div>
+    </div>
+    {% else %}
+    <div class="row">
+      <div class="col-lg-12" align="center">
+        <h1 class="mt-5">{{ title | safe }}</h1>
+      </div>
+    </div>
+    <hr/>
+    {% endif %}
     {% for verse in verses %}
     <div class="row">
       <!-- Hebrew -->
@@ -118,7 +135,7 @@
         <div class="text-right">
           <bdo dir=rtl>
             <p>
-              <strong><a href="{{verse.bible_hub_url}}" target="_blank">{% if page == 'chapter' %}{{ verse.v }}{% else %}{{ verse.ref }}{% endif %}</a></strong> 
+              <strong><a href="{{ verse.bible_hub_url }}" target="_blank">{% if page == 'chapter' %}{{ verse.v }}{% else %}{{ verse.ref }}{% endif %}</a></strong> 
               <span class="hebrew">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.word }}">{{ token.word }}</a>{{ token.word_space }}{% endfor %}</span>
             </p>
           </bdo>
@@ -133,6 +150,16 @@
       </div>
     </div>
     {% endfor %}
+    {% if page == 'chapter' %}
+    <div class="row">
+      <div class="col-lg-12">
+        <ul class="pagination justify-content-center mt-1">
+          <li class="page-item {% if chapter == 1 %}disabled{% endif %}"><a class="page-link" href="book?name={{ book.name }}&chapter={{ chapter - 1 }}">&laquo;</a></li>
+          <li class="page-item {% if chapter == book.num_chapters %}disabled{% endif %}"><a class="page-link" href="book?name={{ book.name }}&chapter={{ chapter + 1 }}">&raquo;</a></li>
+        </ul>
+      </div>
+    </div>
+    {% endif %}
     {% for token in tokens %}
     <div class="modal fade" id="{{ token.word }}" tabindex="-1" role="dialog" aria-labelledby="{{ token.word }}-label" aria-hidden="true">
       <div class="modal-dialog" role="document">

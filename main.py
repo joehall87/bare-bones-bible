@@ -30,13 +30,13 @@ def book():
     chapter = request.args.get('chapter')
     kw = {'book': book, 'dropdown': tanakh.get_dropdown()}
     if not chapter:
-        return render_template('home.html', page='chapter-select', title=book.name, **kw)
+        return render_template('home.html', page='chapter-select', **kw)
     else:
         c = int(chapter)
         title = '{} {}'.format(book.name, c)
         verses = list(book.iter_verses((c, None), (c, None)))
         tokens = _find_unique_tokens(verses)
-        return render_template('home.html', page='chapter', title=title, verses=verses, tokens=tokens, **kw)
+        return render_template('home.html', page='chapter', chapter=c, verses=verses, tokens=tokens, **kw)
 
 
 @app.route('/search')
@@ -50,14 +50,14 @@ def search():
     passage = tanakh.get_passage(search_str)
     if passage:
         book, start, end = passage
-        title = _pretty_passage(book, start, end)
         verses = list(book.iter_verses(start, end))
         tokens = _find_unique_tokens(verses)
-        kw.update({'title': title, 'verses': verses, 'tokens': tokens})
+        kw.update({'verses': verses, 'tokens': tokens})
         if start[0] == end[0] and start[1] is None and end[1] is None:
-            return render_template('home.html', page='chapter', **kw)
+            return render_template('home.html', page='chapter', book=book, chapter=start[0], **kw)
         else:
-            return render_template('home.html', page='search-result', **kw)
+            title = _pretty_passage(book, start, end)
+            return render_template('home.html', page='search-result', title=title, **kw)
 
     # 2. English or tlit phrase
     occurrences, verses = tanakh.search(search_str, use='en')
@@ -75,10 +75,11 @@ def _pretty_passage(book, start, end):
     style = 'style="font-size: 75%"'
     if c1 == c2:
         passage += str(c1)
-        if v1 and v2 and v1 == v2:
-            passage += '<span {}>:{}</span>'.format(style, v1)
-        elif v1 < v2:
-            passage += '<span {}>:{}-{}</span>'.format(style, v1, v2)
+        if v1 and v2:
+            if v1 == v2:
+                passage += '<span {}>:{}</span>'.format(style, v1)
+            else:
+                passage += '<span {}>:{}-{}</span>'.format(style, v1, v2)
     elif v1 and v2:
         passage += '{}<span {}>:{}</span>-{}<span {}>:{}</span>'.format(c1, style, v1, c2, style, v2)
     else:
