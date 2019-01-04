@@ -4,7 +4,6 @@ import os.path
 import re
 
 from .hebrew import Hebrew
-from .lexicon import Lexicon
 
 
 _RESOURCES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'resources')
@@ -16,12 +15,7 @@ _HEBREW = Hebrew()
 class Tanakh():
 	"""Wrapper around all books in Tanakh."""
 	def __init__(self):
-		self.lexicon = Lexicon()
-
-	@property
-	def books(self):
-		"""Return all books."""
-		return [Book(collection, name, lexicon=self.lexicon) for collection, name in [
+		self.books = [Book(collection, name) for collection, name in [
 			('Torah', 'Genesis'),
 			('Torah', 'Exodus'),
 			('Torah', 'Leviticus'),
@@ -131,11 +125,10 @@ class Tanakh():
 class Book(object):
 	"""Wrapper around the Hebrew text for a book."""
 
-	def __init__(self, collection, name, lexicon=None):
+	def __init__(self, collection, name):
 		self.collection = collection
 		self.name = name
 		self.he_name = None
-		self.lexicon = lexicon
 		name = name.replace(' ', '').lower()
 		if name[0].isdigit():
 			num = name[0]
@@ -199,9 +192,8 @@ class Verse(object):
 		self.english = english
 		for alias in ['the Lord', 'The Lord', 'the LORD', 'The LORD']:
 			self.english = self.english.replace(alias, 'Yahweh')
-		self.hebrew = hebrew
+		self.hebrew = _HEBREW.strip_cantillations(hebrew)
 		self.transliteration = _HEBREW.transliterate(hebrew)
-		self._he_tokens = None
 
 	@property
 	def ref(self):
@@ -230,38 +222,15 @@ class Verse(object):
 	@property
 	def he_tokens(self):
 		"""Hebrew tokens."""
-		if self._he_tokens is None:
-			self._he_tokens = []
-			parts = _HEBREW.strip_cantillations(self.hebrew).split()
-			for word in parts:  # Remove cantillations
-				space = ' '
-				if word == '\u05C0':
-					self._he_tokens[-1].word_space += '\u05C0 '
-					continue
-
-				if word[0] in {'[', '(', '<'}:
-					self._he_tokens[-1].word_space += ' ' + word[0]
-					word = word[1:]
-
-				if word[-1] in {'\u05C3', ']', ')', '>'}:
-					word, space = word[:-1], word[-1] + ' '
-
-				if '\u05BE' in word:
-					parts = word.split('\u05BE')
-					self._he_tokens.extend([Token(part, '\u05BE', lexicon=self.book.lexicon) for part in parts[:-1]])
-					self._he_tokens.extend([Token(parts[-1], space, lexicon=self.book.lexicon)])
-				else:
-					self._he_tokens.append(Token(word, space, lexicon=self.book.lexicon))
-		return self._he_tokens	
+		return [Token(w, s) for w, s in _HEBREW.split_tokens(self.hebrew)]	
 
 
 class Token(object):
 	"""Token wrapper."""
-	def __init__(self, word, space=None, lexicon=None):
+	def __init__(self, word, space=None):
 		self.word = word
 		self.word_space = space
 		self.word_no_vowels = _HEBREW.strip_niqqud(self.word)
-		self.lexicon = lexicon
 
 	@property
 	def tlit(self):
@@ -272,8 +241,3 @@ class Token(object):
 	def tlit_space(self):
 		"""Transliteration of space."""
 		return _HEBREW.transliterate(self.word_space)
-
-	@property
-	def description(self):
-		"""Description of word."""
-		return self.lexicon.description(self.word)

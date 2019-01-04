@@ -103,7 +103,7 @@
     </div>
   </main>
 
-  <!-- ** Chapter ** -->
+  <!-- ** Chapter or Search Result ** -->
   {% elif page in ['chapter', 'search-result'] %}
   <main role="main" class="container">
     {% if page == 'chapter' %}
@@ -136,11 +136,11 @@
           <bdo dir=rtl>
             <p>
               <strong><a href="{{ verse.bible_hub_url }}" target="_blank">{% if page == 'chapter' %}{{ verse.v }}{% else %}{{ verse.ref }}{% endif %}</a></strong> 
-              <span class="hebrew">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.word }}">{{ token.word }}</a>{{ token.word_space }}{% endfor %}</span>
+              <span class="hebrew">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.tlit }}">{{ token.word }}</a>{{ token.word_space }}{% endfor %}</span>
             </p>
           </bdo>
           <p>
-            <span class="translit">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.word }}">{{ token.tlit }}</a>{{ token.tlit_space }}{% endfor %}</span>
+            <span class="translit">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.tlit }}">{{ token.tlit }}</a>{{ token.tlit_space }}{% endfor %}</span>
           </p>
         </div>
       </div>
@@ -150,6 +150,7 @@
       </div>
     </div>
     {% endfor %}
+    <!-- Chapter nav-buttons -->
     {% if page == 'chapter' %}
     <div class="row">
       <div class="col-lg-12 mt-3">
@@ -163,21 +164,20 @@
     </div>
     <div class="row"><div class="col-lg-12 mt-1">&nbsp;</div></div>
     {% endif %}
-    {% for token in tokens %}
-    <div class="modal fade" id="{{ token.word }}" tabindex="-1" role="dialog" aria-labelledby="{{ token.word }}-label" aria-hidden="true">
+    <!-- Modals -->
+    {% for token, desc in modals %}
+    <div class="modal fade" id="{{ token.tlit }}" tabindex="-1" role="dialog" aria-labelledby="{{ token.tlit }}-label" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="{{ token.word }}-label">
-              <span class="hebrew">{{ token.word}}</span> &ndash; {{token.tlit}}
+            <h5 class="modal-title" id="{{ token.tlit }}-label">
+              <span class="hebrew">{{ token.word }}</span> &ndash; {{ token.tlit }}
             </h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
-          <div class="modal-body">
-            {{ token.description | safe }}
-          </div>
+          <div class="modal-body">{{ desc | safe }}</div>
         </div>
       </div>
     </div>

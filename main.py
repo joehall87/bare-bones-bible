@@ -4,6 +4,7 @@ import re
 from flask import Flask, render_template, redirect, request, url_for
 
 from bibleapp.book import Tanakh
+from bibleapp.lexicon import Lexicon
 
 
 app = Flask(__name__)
@@ -25,6 +26,7 @@ def home():
 def book():
     """Show book."""
     tanakh = Tanakh()
+    lexicon = Lexicon()
     print(request.args['name'])
     book = tanakh.get_book(request.args['name'])
     chapter = request.args.get('chapter')
@@ -35,14 +37,15 @@ def book():
         c = int(chapter)
         title = '{} {}'.format(book.name, c)
         verses = list(book.iter_verses((c, None), (c, None)))
-        tokens = _find_unique_tokens(verses)
-        return render_template('home.html', page='chapter', chapter=c, verses=verses, tokens=tokens, **kw)
+        modals = _create_modals(lexicon, verses)
+        return render_template('home.html', page='chapter', chapter=c, verses=verses, modals=modals, **kw)
 
 
 @app.route('/search')
 def search():
     """Search for a range of text."""
     tanakh = Tanakh()
+    lexicon = Lexicon()
     kw = {'dropdown': tanakh.get_dropdown()}
     search_str = request.args['text'].strip()
 
@@ -51,8 +54,8 @@ def search():
     if passage:
         book, start, end = passage
         verses = list(book.iter_verses(start, end))
-        tokens = _find_unique_tokens(verses)
-        kw.update({'verses': verses, 'tokens': tokens})
+        modals = _create_modals(lexicon, verses)
+        kw.update({'verses': verses, 'modals': modals})
         if start[0] == end[0] and start[1] is None and end[1] is None:
             return render_template('home.html', page='chapter', book=book, chapter=start[0], **kw)
         else:
@@ -64,8 +67,8 @@ def search():
     #if not occurrences:
     #    occurrences, verses = tanakh.search(search_str, use='tlit')
     title = '{} <span style="font-size: 75%">occurrences of <span class="highlight">{}</span></span>'.format(occurrences, search_str)
-    tokens = _find_unique_tokens(verses)
-    return render_template('home.html', page='search-result', title=title, verses=verses, tokens=tokens, **kw)
+    modals = _create_modals(lexicon, verses)
+    return render_template('home.html', page='search-result', title=title, verses=verses, modals=modals, **kw)
 
 
 def _pretty_passage(book, start, end):
@@ -87,14 +90,15 @@ def _pretty_passage(book, start, end):
     return passage
 
 
-def _find_unique_tokens(verses):
-    tokens, used = [], set()
+def _create_modals(lexicon, verses):
+    modals, used = [], set()
     for verse in verses:
         for token in verse.he_tokens:
             if token.word not in used:
-                tokens.append(token)
+                desc = lexicon.description(token.word)
+                modals.append((token, desc))
                 used.add(token.word)
-    return tokens
+    return modals
 
 
 if __name__ == '__main__':

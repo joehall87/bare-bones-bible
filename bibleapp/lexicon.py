@@ -25,10 +25,10 @@ class Lexicon(object):
 		"""Return an html-description of the word."""
 		desc = ''
 		word = re.sub("[^\u05D0-\u05EA]", "", word)
-		entry = self.map.get(word)
+		entry = self.map.get(word, {})
 
 		# 1. Google translate
-		trans = entry['trans']
+		trans = entry.get('trans')
 		root = entry.get('root')
 		if root:
 			entry = self.map.get(root)

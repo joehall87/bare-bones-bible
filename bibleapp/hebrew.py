@@ -65,6 +65,7 @@ class Hebrew(object):
         'sof-pasuq': '\u05C3',
         'nun-hafukha': '\u05C6',
     }
+    _SPLIT_RE = re.compile('([^\u0591-\u05AF\u05B0-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA]+)')
     _CHARS = {
         'aleph': '\u05D0',
         'bet': '\u05D1',
@@ -229,6 +230,15 @@ class Hebrew(object):
     def strip_niqqud(self, phrase):
         """Strip all niqqud."""
         return self._NIQQUD_RE.sub('', phrase)
+
+    def split_tokens(self, phrase):
+        """Split phrase into tokens and spaces."""
+        parts = self._SPLIT_RE.split(phrase)
+        for i in range(0, len(parts), 2):
+            token = parts[i]
+            space = parts[i + 1] if i < len(parts) - 1 else ''
+            if token:
+                yield token, space
 
     def transliterate(self, phrase, reverse=False):
         """Transliterate to english."""
