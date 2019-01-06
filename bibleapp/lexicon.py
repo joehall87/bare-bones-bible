@@ -29,24 +29,18 @@ class Lexicon(object):
 
 		# 1. Google translate
 		trans = entry.get('trans')
-		root = entry.get('root')
-		if root:
-			entry = self.map.get(root)
-		if trans and root:
-			desc += '<p><strong>{}</strong> means <em>"{}"</em> (according to Google), the root word is probably <strong>{}</strong>, which means <em>"{}"</em></p>'.format(
-				word, trans, root, entry['trans'])
-		elif trans:
+		if trans:
 			desc += '<p><strong>{}</strong> means <em>"{}"</em> (according to Google)</p>'.format(word, trans)
 		else:
 			desc += "<p>Google doesn't know what this means!</p>"
 
 		# 2. References
+		# TODO: Incorporate variants!
 		refs = entry.get('refs')
 		if refs:
-			variants = ['{} ({})'.format(v, self.map.get(v)['trans']) for v in entry['variants']]
 			desc += (
-				"<hr/><p>{root} first appears in {first} and is used <strong>{n}</strong> times in the Tanakh in the forms: {variants}".format(
-					root=root or word, first=self._make_ref_link(refs[0]), n=len(refs), variants=' '.join(variants))
+				"<hr/><p>First appears in {first} and is used <strong>{n}</strong> times in the Tanakh".format(
+					first=self._make_ref_link(refs[0]), n=len(refs))
 			)
 
 		# 3. Strongs

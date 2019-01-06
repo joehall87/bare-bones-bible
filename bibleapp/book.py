@@ -15,7 +15,7 @@ _HEBREW = Hebrew()
 class Tanakh():
 	"""Wrapper around all books in Tanakh."""
 	def __init__(self):
-		self.books = [Book(collection, name) for collection, name in [
+		self.books = [Book(x[0], x[1], bhub=x[2] if len(x) > 2 else None) for x in [
 			('Torah', 'Genesis'),
 			('Torah', 'Exodus'),
 			('Torah', 'Leviticus'),
@@ -45,7 +45,7 @@ class Tanakh():
 			('Ketuvim', 'Psalms'),
 			('Ketuvim', 'Proverbs'),
 			('Ketuvim', 'Job'),
-			('Ketuvim', 'Song of Songs'),
+			('Ketuvim', 'Song of Songs', 'songs'),
 			('Ketuvim', 'Ruth'),
 			('Ketuvim', 'Lamentations'),
 			('Ketuvim', 'Ecclesiastes'),
@@ -125,9 +125,10 @@ class Tanakh():
 class Book(object):
 	"""Wrapper around the Hebrew text for a book."""
 
-	def __init__(self, collection, name):
+	def __init__(self, collection, name, bhub=None):
 		self.collection = collection
 		self.name = name
+		self.bhub = bhub or name.replace(' ', '_').lower()
 		self.he_name = None
 		name = name.replace(' ', '').lower()
 		if name[0].isdigit():
@@ -149,19 +150,6 @@ class Book(object):
 		if self._content is None:
 			self._content = self._init_content()
 		return self._content
-	
-	def _init_content(self):
-		content = []
-		blobs = {}
-		for lan in ['en', 'he']:
-			path = os.path.join(_RESOURCES_DIR, 'sefaria', '{}.{}.json'.format(self.name, lan))
-			with open(path, 'r') as f:
-				blobs[lan] = json.load(f)
-		self.he_name = blobs['he']['heTitle']
-		for c, (en_chapter, he_chapter) in enumerate(zip(blobs['en']['text'], blobs['he']['text']), start=1):
-			for v, (en_verse, he_verse) in enumerate(zip(en_chapter, he_chapter), start=1):
-				content.append(Verse(self, c, v, en_verse, he_verse))
-		return content
 
 	def is_match(self, alias):
 		"""Does this alias match this book?"""
@@ -181,6 +169,19 @@ class Book(object):
 		for verse in self.content:
 			if (c1, v1) <= (verse.c, verse.v) <= (c2, v2):
 				yield verse
+	
+	def _init_content(self):
+		content = []
+		blobs = {}
+		for lan in ['en', 'he']:
+			path = os.path.join(_RESOURCES_DIR, 'sefaria', '{}.{}.json'.format(self.name, lan))
+			with open(path, 'r') as f:
+				blobs[lan] = json.load(f)
+		self.he_name = blobs['he']['heTitle']
+		for c, (en_chapter, he_chapter) in enumerate(zip(blobs['en']['text'], blobs['he']['text']), start=1):
+			for v, (en_verse, he_verse) in enumerate(zip(en_chapter, he_chapter), start=1):
+				content.append(Verse(self, c, v, en_verse, he_verse))
+		return content
 
 
 class Verse(object):
@@ -204,7 +205,7 @@ class Verse(object):
 	def bible_hub_url(self):
 		"""The bible-hub url."""
 		return "https://biblehub.com/lexicon/{b}/{c}-{v}.htm".format(
-			b=self.book.name.replace(' ', '_').lower(), c=self.c, v=self.v)
+			b=self.book.bhub, c=self.c, v=self.v)
 
 	def search(self, search_str, use='en'):
 		"""Search for an english or transliterated word/phrase."""
