@@ -234,6 +234,11 @@ class Token(object):
 		self.word_no_vowels = _HEBREW.strip_niqqud(self.word)
 
 	@property
+	def label(self):
+		"""Html label."""
+		return self.word
+
+	@property
 	def tlit(self):
 		"""Transliteration."""
 		return _HEBREW.transliterate(self.word)

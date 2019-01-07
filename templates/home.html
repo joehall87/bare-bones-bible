@@ -136,11 +136,11 @@
           <bdo dir=rtl>
             <p>
               <strong><a href="{{ verse.bible_hub_url }}" target="_blank">{% if page == 'chapter' %}{{ verse.v }}{% else %}{{ verse.ref }}{% endif %}</a></strong> 
-              <span class="hebrew">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.tlit }}">{{ token.word }}</a>{{ token.word_space }}{% endfor %}</span>
+              <span class="hebrew">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.label }}">{{ token.word }}</a>{{ token.word_space }}{% endfor %}</span>
             </p>
           </bdo>
           <p>
-            <span class="translit">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.tlit }}">{{ token.tlit }}</a>{{ token.tlit_space }}{% endfor %}</span>
+            <span class="translit">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.label }}">{{ token.tlit }}</a>{{ token.tlit_space }}{% endfor %}</span>
           </p>
         </div>
       </div>
@@ -166,11 +166,11 @@
     {% endif %}
     <!-- Modals -->
     {% for token, desc in modals %}
-    <div class="modal fade" id="{{ token.tlit }}" tabindex="-1" role="dialog" aria-labelledby="{{ token.tlit }}-label" aria-hidden="true">
+    <div class="modal fade" id="{{ token.label }}" tabindex="-1" role="dialog" aria-labelledby="{{ token.label }}-label" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="{{ token.tlit }}-label">
+            <h5 class="modal-title" id="{{ token.label }}-label">
               <span class="hebrew">{{ token.word }}</span> &ndash; {{ token.tlit }}
             </h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">

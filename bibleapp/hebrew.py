@@ -112,7 +112,7 @@ class Hebrew(object):
         'm': 'mem',
         'n': 'nun',
         's': 'samekh',
-        "`": 'ayin',
+        ".": 'ayin',
         'p': 'peh',
         'ts': 'tsadi',
         'q': 'qof',
@@ -127,7 +127,7 @@ class Hebrew(object):
         'tsF': 'f-tsadi',
     }
     _CONS_TRANSLIT = {
-        ('aleph',): "\u2018",
+        ('aleph',): "'",
         ('bet',): 'v',
         ('gimmel',): 'g',
         ('dalet',): 'd',
@@ -142,7 +142,7 @@ class Hebrew(object):
         ('mem',): 'm',
         ('nun',): 'n',
         ('samekh',): 's',
-        ('ayin',): '\u00B7',   #'\u2019',  #"\u0294",
+        ('ayin',): '.',   #"\u00B7"=dot
         ('peh',): 'ph',
         ('tsadi',): 'ts',
         ('qof',): 'q',
@@ -165,7 +165,7 @@ class Hebrew(object):
         ('mem', 'dagesh'): 'M',
         ('nun', 'dagesh'): 'N',
         ('samekh', 'dagesh'): 'S',
-        ('ayin', 'dagesh'): '\u2019',  #"\u0294",
+        ('ayin', 'dagesh'): '.',  #"\u00B7"=dot,
         ('peh', 'dagesh'): 'P',  # p
         ('tsadi', 'dagesh'): 'Ts',
         ('qof', 'dagesh'): 'Q',
@@ -183,7 +183,7 @@ class Hebrew(object):
         ('f-tsadi',): 'ts',
     }
     _VOWEL_TRANSLIT = {
-        ('sheva',): "\u2018",
+        ('sheva',): "'",
         ('hataf-segol',): 'e',  # half
         ('hataf-patah',): 'a',  # half
         ('hataf-qamats',): 'o',  # half
@@ -225,7 +225,8 @@ class Hebrew(object):
 
     def strip_cantillations(self, phrase):
         """Strip all cantillations."""
-        return self._CANTILLATIONS_RE.sub('', phrase)
+        phrase = self._CANTILLATIONS_RE.sub('', phrase)
+        return phrase.replace(self._NIQQUD['meteg'], '')  # Meteg is messing with css-font :(
 
     def strip_niqqud(self, phrase):
         """Strip all niqqud."""

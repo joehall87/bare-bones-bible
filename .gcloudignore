@@ -20,3 +20,6 @@ __pycache__/
 
 # Ignore virtualenv
 env/
+
+# Ignore scraped web content
+BibleHubScrape*
