@@ -50,13 +50,16 @@ def run():
             ref = book.ref, verse.c, verse.v
             for token in verse.he_tokens:
                 w = _clean(token.word)
-                root = _find_root(w, translations)
                 if w not in lexicon:
+                    entries = strongs.get(w, [])
+                    root = _clean(entries[0]['w']) if entries else w
+                    vars_ = sorted(set(v for entry in entries for v in variants[entry['id']] if v != w))
                     lexicon[w] = {
                         'trans': translations.get(w),
                         'root': root,
                         'refs': [ref],
-                        'strongs': strongs.get(w, []),
+                        'strongs': entries,
+                        'variants': vars_,
                     }
                 else:
                     lexicon[w]['refs'].append(ref)
@@ -64,19 +67,6 @@ def run():
     print('4. Persist')
     with open(os.path.join(LEXICON_DIR, 'CustomHebrewLexicon.json'), 'w') as f:
         json.dump(lexicon, f)
-
-
-def _find_root(w, translations):
-    en = translations[w]
-    if en:
-        en = {  # Couple of horrible hacks
-            'Genesis': 'the genesis',
-            'Country': 'the country',
-        }.get(en, en).lower()
-        if any(en.startswith(prefix + ' ') for prefix in ['and the']):
-            return w[2:]
-        if any(en.startswith(prefix + ' ') for prefix in ['and', 'the']):
-            return w[1:]
 
 
 def _load_translations():

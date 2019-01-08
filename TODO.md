@@ -1,6 +1,6 @@
 # TODO
 Here are the improvements I would like to make:
-- Figure out how to show "variants"
+- Debug strongs map
 - Figure out transliteration-search
 - Pagination of search-results
 - Fix versification diff

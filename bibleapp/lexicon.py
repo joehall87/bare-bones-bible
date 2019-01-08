@@ -25,25 +25,33 @@ class Lexicon(object):
 		"""Return an html-description of the word."""
 		desc = ''
 		word = re.sub("[^\u05D0-\u05EA]", "", word)
-		entry = self.map.get(word, {})
+		entry = self.map.get(word)
+		if not entry:
+			return "<p>Can't find this word in lexicon.</p>"
 
-		# 1. Google translate
-		trans = entry.get('trans')
+		# 1. Google translate and refs
+		root = self.map.get(entry['root'], {})
+		trans = entry['trans']
 		if trans:
-			desc += '<p><strong>{}</strong> means <em>"{}"</em> (according to Google)</p>'.format(word, trans)
+			desc += (
+				"<p>Means <em>\"{}\"</em> according to Google and "
+				"appears <strong>{}</strong> times in the Tanakh, first in {}. "
+				.format(trans, len(entry['refs']), self._make_ref_link(entry['refs'][0]))
+			)
+			root_trans = root.get('trans')
+			if trans != root_trans:
+				refs_same_root = [ref for w in entry['variants'] for ref in self.map.get(w, {}).get('refs', [])]
+				refs_same_root = sorted(entry['refs'] + refs_same_root, key=_ref_sort_key)
+				desc += (
+					"The root word <strong>{}</strong> <em>\"{}\"</em> appears "
+					"<strong>{}</strong> times in {} different forms, first in {}."
+					.format(entry['root'], root_trans, len(refs_same_root), len(entry['variants']) + 1, self._make_ref_link(refs_same_root[0]))
+				)
+			desc += '</p>'
 		else:
 			desc += "<p>Google doesn't know what this means!</p>"
 
-		# 2. References
-		# TODO: Incorporate variants!
-		refs = entry.get('refs')
-		if refs:
-			desc += (
-				"<hr/><p>First appears in {first} and is used <strong>{n}</strong> times in the Tanakh".format(
-					first=self._make_ref_link(refs[0]), n=len(refs))
-			)
-
-		# 3. Strongs
+		# 2. Strongs
 		for i, item in enumerate(entry.get('strongs', [])):
 			if i == 0:
 				desc += '<hr/>'
@@ -65,4 +73,4 @@ def _ref_sort_key(ref):
 		'amo', 'oba', 'jon', 'mic', 'nah', 'hab', 'zep', 'hag', 'zec', 'mal', 'psa', 'pro', 'job', 'son', 'rut', 'lam', 
 		'ecc', 'est', 'dan', 'ezr', 'neh', '1chr', '2chr',
 	]
-	return book_num.index(ref[0]), ref[1], ref[2]
+	return book_num.index(ref[0].lower()), ref[1], ref[2]
