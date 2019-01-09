@@ -75,16 +75,21 @@ class Tanakh():
 		"""Get a specific book."""
 		return [book for book in self.books if book.is_match(alias)][0]
 
-	def search(self, search_str, use='en'):
+	def search(self, search_str, book_filter=None, use='en'):
 		"""Find a word or phrase."""
 		occurrences, verses = 0, []
-		search_re = re.compile('({})'.format(search_str.replace('*', '\S*')), flags=re.IGNORECASE)
+		if use == 'en':
+			search_obj = re.compile('({})'.format(search_str.replace('*', '\S*')), flags=re.IGNORECASE)
+		else:
+			search_obj = re.split('[\s\-:]', search_str)
+		print(search_obj)
 		for book in self.books:
-			for verse in book.iter_verses():
-				num = verse.search(search_re, use=use)
-				if num:
-					occurrences += num
-					verses.append(verse)
+			if not book_filter or book.is_match(book_filter):
+				for verse in book.iter_verses():
+					num = verse.search(search_obj, use=use)
+					if num:
+						occurrences += num
+						verses.append(verse)
 		return occurrences, verses
 
 	def get_passage(self, passage_str):
@@ -196,7 +201,7 @@ class Verse(object):
 		for alias in ['the Lord', 'The Lord', 'the LORD', 'The LORD']:
 			self.english = self.english.replace(alias, 'Yahweh')
 		self.hebrew = _HEBREW.strip_cantillations(hebrew)
-		self.transliteration = _HEBREW.transliterate(hebrew)
+		self._he_tokens = None
 
 	@property
 	def ref(self):
@@ -209,23 +214,52 @@ class Verse(object):
 		return "https://biblehub.com/lexicon/{b}/{c}-{v}.htm".format(
 			b=self.book.bhub, c=self.c, v=self.v)
 
-	def search(self, search_str, use='en'):
+	def search(self, search_obj, use='en'):
 		"""Search for an english or transliterated word/phrase."""
-		search_re = search_str
-		if isinstance(search_str, str):
-			search_re = re.compile('({})'.format(search_str.replace('*', '\S*')), flags=re.IGNORECASE)
 		if use == 'en':
-			num = len(search_re.findall(self.english))
+			if isinstance(search_obj, str):
+				search_obj = re.compile('({})'.format(search_obj.replace('*', '\S*')), flags=re.IGNORECASE)
+			num = len(search_obj.findall(self.english))
 			if num:
-				self.english = search_re.sub('<span class="highlight">\g<1></span>', self.english)
+				self.english = search_obj.sub('<span class="highlight">\g<1></span>', self.english)
+
 		elif use == 'tlit':
-			pass  # TODO: Figure this out!!
+			num = 0
+			tokens = self.he_tokens
+			if isinstance(search_obj, str):
+				search_obj = re.split(' -:', search_str)
+			n = len(search_obj)
+			# Just looking for a single word
+			if n == 1:
+				for token in tokens:
+					if search_obj[0] in token.tlit:
+						token.highlight = True
+						num += 1
+			# Looking for multiple words
+			else:
+				for i in range(len(tokens) - n + 1):
+					for j in range(n):
+						print(tokens[i + j].tlit, search_obj[j])
+						if j == 0:
+							success = True#tokens[i + j].tlit.endswith(search_obj[j])
+						elif j < n - 1:
+							success = True#tokens[i + j].tlit == search_obj[j]
+						else:
+							success = tokens[i + j].tlit.startswith(search_obj[j])
+						if not success:
+							break
+					if success:
+						num += 1
+						for j in range(n):
+							tokens[i + j].highlight = True
 		return num
 
 	@property
 	def he_tokens(self):
 		"""Hebrew tokens."""
-		return [Token(w, s) for w, s in _HEBREW.split_tokens(self.hebrew)]	
+		if not self._he_tokens:
+			self._he_tokens = [Token(w, s) for w, s in _HEBREW.split_tokens(self.hebrew)]	
+		return self._he_tokens
 
 
 class Token(object):
@@ -234,6 +268,7 @@ class Token(object):
 		self.word = word
 		self.word_space = space
 		self.word_no_vowels = _HEBREW.strip_niqqud(self.word)
+		self.highlight = False
 
 	@property
 	def label(self):

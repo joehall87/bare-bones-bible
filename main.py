@@ -63,12 +63,27 @@ def search():
             return render_template('home.html', page='search-result', title=title, **kw)
 
     # 2. English or tlit phrase
-    occurrences, verses = tanakh.search(search_str, use='en')
-    #if not occurrences:
-    #    occurrences, verses = tanakh.search(search_str, use='tlit')
+    occurrences, verses = 0, []
+    search_str, options = _extract_options(search_str)
+    if options.get('lan', '').lower() not in {'he', 'heb', 'hebrew', 'tlit', 'translit', 'transliteration'}:
+        occurrences, verses = tanakh.search(search_str, book_filter=options.get('book'), use='en')
+    if not occurrences:
+        occurrences, verses = tanakh.search(search_str, book_filter=options.get('book'), use='tlit')
     title = '{} <span style="font-size: 75%">occurrences of <span class="highlight">{}</span></span>'.format(occurrences, search_str)
     modals = _create_modals(lexicon, verses)
     return render_template('home.html', page='search-result', title=title, verses=verses, modals=modals, **kw)
+
+
+def _extract_options(search_str):
+    options = {}
+    new_str_list = []
+    for part in search_str.split():
+        kv = part.split(':')
+        if len(kv) == 2 and kv[0] and kv[1]:
+            options[kv[0].lower()] = kv[1]
+        else:
+            new_str_list.append(part)
+    return ' '.join(new_str_list), options
 
 
 def _pretty_passage(book, start, end):

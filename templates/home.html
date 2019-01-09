@@ -137,11 +137,11 @@
           <bdo dir=rtl>
             <p>
               <strong><a href="{{ verse.bible_hub_url }}" target="_blank">{% if page == 'chapter' %}{{ verse.v }}{% else %}{{ verse.ref }}{% endif %}</a></strong> 
-              <span class="hebrew">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.label }}">{{ token.word }}</a>{{ token.word_space }}{% endfor %}</span>
+              <span class="hebrew">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span class="highlight">{% endif %}{{ token.word }}{% if token.highlight %}</span>{% endif %}</a>{{ token.word_space }}{% endfor %}</span>
             </p>
           </bdo>
           <p>
-            <span class="translit">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.label }}">{{ token.tlit }}</a>{{ token.tlit_space }}{% endfor %}</span>
+            <span class="translit">{% for token in verse.he_tokens %}<a {% if token.highlight %}class="highlight"{% endif %}href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span class="highlight">{% endif %}{{ token.tlit }}{% if token.highlight %}</span>{% endif %}</a>{{ token.tlit_space }}{% endfor %}</span>
           </p>
         </div>
       </div>

@@ -44,8 +44,8 @@ def run():
     lexicon_root = {}
     for book in tanakh.books:
         for verse in book.iter_verses():
-            ref = book.ref, verse.c, verse.v
-            for token in verse.he_tokens:
+            for i, token in enumerate(verse.he_tokens):
+                ref = book.ref, verse.c, verse.v, i
                 w = heb.strip_cantillations(token.word)
                 if w not in lexicon:
                     trans = translations.get(_clean(w))
