@@ -78,11 +78,7 @@ class Tanakh():
 	def search(self, search_str, book_filter=None, use='en'):
 		"""Find a word or phrase."""
 		occurrences, verses = 0, []
-		if use == 'en':
-			search_obj = re.compile('({})'.format(search_str.replace('*', '\S*')), flags=re.IGNORECASE)
-		else:
-			search_obj = re.split('[\s\-:]', search_str)
-		print(search_obj)
+		search_obj = _make_search_obj(search_str, use=use)
 		for book in self.books:
 			if not book_filter or book.is_match(book_filter):
 				for verse in book.iter_verses():
@@ -216,9 +212,9 @@ class Verse(object):
 
 	def search(self, search_obj, use='en'):
 		"""Search for an english or transliterated word/phrase."""
+		if isinstance(search_obj, str):
+			search_obj = _make_search_obj(search_obj)
 		if use == 'en':
-			if isinstance(search_obj, str):
-				search_obj = re.compile('({})'.format(search_obj.replace('*', '\S*')), flags=re.IGNORECASE)
 			num = len(search_obj.findall(self.english))
 			if num:
 				self.english = search_obj.sub('<span class="highlight">\g<1></span>', self.english)
@@ -226,8 +222,6 @@ class Verse(object):
 		elif use == 'tlit':
 			num = 0
 			tokens = self.he_tokens
-			if isinstance(search_obj, str):
-				search_obj = re.split(' -:', search_str)
 			n = len(search_obj)
 			# Just looking for a single word
 			if n == 1:
@@ -239,11 +233,10 @@ class Verse(object):
 			else:
 				for i in range(len(tokens) - n + 1):
 					for j in range(n):
-						print(tokens[i + j].tlit, search_obj[j])
 						if j == 0:
-							success = True#tokens[i + j].tlit.endswith(search_obj[j])
+							success = tokens[i + j].tlit.endswith(search_obj[j])
 						elif j < n - 1:
-							success = True#tokens[i + j].tlit == search_obj[j]
+							success = tokens[i + j].tlit == search_obj[j]
 						else:
 							success = tokens[i + j].tlit.startswith(search_obj[j])
 						if not success:
@@ -284,3 +277,10 @@ class Token(object):
 	def tlit_space(self):
 		"""Transliteration of space."""
 		return _HEBREW.transliterate(self.word_space)
+
+
+def _make_search_obj(search_str, use='en'):
+	if use == 'en':
+		return re.compile('({})'.format(search_str.replace('*', '\S*')), flags=re.IGNORECASE)
+	else:
+		return re.split('[\s\-:]', search_str.lower())
