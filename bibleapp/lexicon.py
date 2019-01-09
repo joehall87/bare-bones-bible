@@ -49,14 +49,14 @@ class Lexicon(object):
 		# 1. Google translate and refs
 		lex_root = self.lex_root.get(lex['root'], {})
 		desc += (
-			"<p>Means <em>\"{}\"</em> according to Google and "
-			"appears <strong>{}</strong> times in the Tanakh, first in {}. "
-			.format(lex['trans'], len(lex['refs']), self._make_ref_link(lex['refs'][0]))
+			"<p>Means <em>\"{}\"</em> according to Google. "
+			#"and appears <strong>{}</strong> times in the Tanakh, first in {}. "
+			.format(lex['trans']) #, len(lex['refs']), self._make_ref_link(lex['refs'][0]))
 		)
 		if lex['root-trans']:
 			desc += (
 				"The root word <strong>{}</strong> <em>\"{}\"</em> appears "
-				"<strong>{}</strong> times, first in {}."
+				"<strong>{}</strong> times in the Tanakh, first in {}."
 				.format(lex['root'], lex['root-trans'], len(lex_root['refs']), self._make_ref_link(lex_root['refs'][0]))
 			)
 		desc += '</p>'
