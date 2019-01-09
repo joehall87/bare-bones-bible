@@ -2,6 +2,7 @@ import json
 import os
 import os.path
 import re
+import urllib.parse
 
 from .hebrew import Hebrew
 
@@ -66,7 +67,8 @@ class Tanakh():
 				prev_collection = book.collection
 				dropdown.append(('div', 'divider', '', ''))
 				dropdown.append(('h5', 'header', book.collection, ''))
-			dropdown.append(('a', 'item', book.name, 'href=/book?name={}'.format(book.name)))
+			params = urllib.parse.urlencode({'name': book.name})
+			dropdown.append(('a', 'item', book.name, 'href=/book?{}'.format(params)))
 		return dropdown[1:]
 
 	def get_book(self, alias):

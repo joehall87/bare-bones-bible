@@ -59,6 +59,7 @@ class Hebrew(object):
         'lower-dot': '\u05C5',
         #'qamats-qatan': '\u05C7',  # <- Not used
     }
+    _PUNCTUATION_RE = re.compile('[\u05BE\u05C0\u05C3\u05C6]')
     _PUNCTUATION = {
         'maqaf': '\u05BE',
         'paseq': '\u05C0',
@@ -203,9 +204,9 @@ class Hebrew(object):
         ('nun-hafukha',): '',
     }
     _TRANSLIT_SUBS = [
-        ("\u2018\u2018", "\u2018"),
-        (" \u2018", " "),
-        ("^\u2018", ""),
+        ("''", "'"),
+        (" '", " "),
+        ("^'", ""),
         ('iy', 'i'),
         ('iw ', 'i '),
         ('iw$', 'i'),
@@ -232,6 +233,10 @@ class Hebrew(object):
         """Strip all niqqud."""
         return self._NIQQUD_RE.sub('', phrase)
 
+    def strip_punctuation(self, phrase):
+        """Strip all punctuation."""
+        return self._PUNCTUATION_RE.sub('', phrase)
+
     def split_tokens(self, phrase):
         """Split phrase into tokens and spaces."""
         parts = self._SPLIT_RE.split(phrase)
@@ -248,6 +253,11 @@ class Hebrew(object):
             tlit = re.sub(seq, sub, tlit)
         tlit = ' '.join(tlit.split()[::-1]) if reverse else tlit
         return tlit.lower()   # <- lower looks a bit nicer
+
+    def sort_niqqud(self, phrase):
+        """Ensure chars with multiple-niqqud have them in a consistent order."""
+        phrase = ''.join(''.join(sorted(clump, reverse=True)) for clump in self._iter_clumps(phrase))
+        return phrase.replace(self._NIQQUD['dagesh'], '')  # Dagesh doesn't alter the meaning
 
     def _tlit(self, clump):
         tlit = None
@@ -274,7 +284,4 @@ class Hebrew(object):
                     yield clump
                     clump = c
             yield clump
-
-    #def __getattr__(self, item):
-    #    return self._MAP.get(item, self._MAP.get(self._ALIASES.get(item)))
 

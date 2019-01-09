@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
 import glob
 import json
 import os.path
@@ -10,6 +10,7 @@ import requests
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from bibleapp.book import Tanakh
+from bibleapp.hebrew import Hebrew
 
 
 # Need to put HebrewStrong.xml and LexicalIndex.xml from https://github.com/openscriptures/HebrewLexicon into this dir:
@@ -23,50 +24,47 @@ PRE_AND_SUF = ['as they', 'in her', 'in his', 'in my', 'in their', 'they will', 
 
 def run():
     """Create an easy-to-use json Hebrew lexicon."""
+    heb = Hebrew()
+
     print('1. Loading translations')
     translations = _load_translations()
 
     print('2. Loading strongs')
-    entries = _load_strongs_entries()
-    strongs = _load_word_to_strongs()
+    entries = _load_strongs_entries(heb)
+    strongs = _load_word_to_strongs(heb)
+    strongs = {word: entries[id_] for word, id_ in strongs.items() if id_ in entries}
     variants = defaultdict(set)
-    for word, ids in strongs.items():
-        strongs[word] = [entries[id_] for id_ in ids if id_ in entries]
-        for id_ in ids:
-            variants[id_].add(word)
-    variants = {i: sorted(ws) for i, ws in variants.items()}
+    #variants = {i: sorted(ws) for i, ws in variants.items()}
 
     print('3. Creating lexicon')
-    lexicon = defaultdict(lambda: {
-        'trans': None,
-        'root': None,
-        'refs': [],
-        'strongs': [],
-        'variants': set(),
-    })
+    lexicon = {}
+    references = defaultdict(list)
     tanakh = Tanakh()
     for book in tanakh.books:
         for verse in book.iter_verses():
             ref = book.ref, verse.c, verse.v
             for token in verse.he_tokens:
-                w = _clean(token.word)
+                w = heb.strip_cantillations(token.word)
+                references[w].append(ref)
                 if w not in lexicon:
-                    entries = strongs.get(w, [])
-                    root = _clean(entries[0]['w']) if entries else w
-                    vars_ = sorted(set(v for entry in entries for v in variants[entry['id']] if v != w))
+                    w2 = heb.sort_niqqud(w)
+                    entry = strongs.get(w2)
+                    if not entry:
+                        entry = strongs.get(w2.replace('\u05d5\u05b9', '\u05b9\u05d5'))
+                    root = entry['w'] if entry else w
+                    #vars_ = sorted(set(v for entry in entries for v in variants[entry['id']] if v != w))
                     lexicon[w] = {
-                        'trans': translations.get(w),
+                        'trans': translations.get(_clean(w)),
                         'root': root,
-                        'refs': [ref],
-                        'strongs': entries,
-                        'variants': vars_,
+                        'strongs': entry,
+                        #'variants': vars_,
                     }
-                else:
-                    lexicon[w]['refs'].append(ref)
 
     print('4. Persist')
-    with open(os.path.join(LEXICON_DIR, 'CustomHebrewLexicon.json'), 'w') as f:
+    with open(os.path.join(LEXICON_DIR, 'Lexicon.json'), 'w') as f:
         json.dump(lexicon, f)
+    with open(os.path.join(LEXICON_DIR, 'References.json'), 'w') as f:
+        json.dump(references, f)
 
 
 def _load_translations():
@@ -74,14 +72,14 @@ def _load_translations():
         return json.load(f)
 
 
-def _load_strongs_entries():
+def _load_strongs_entries(heb):
     with open(os.path.join(LEXICON_DIR, 'HebrewStrong.xml'), 'r') as f:
         strongs_xml = bs4.BeautifulSoup(f.read(), 'html.parser')
     strongs = {}
     for x in strongs_xml.find_all('entry'):
         strongs[x['id']] = {
             'id': x['id'],
-            'w': _get(x, 'w'),
+            'w': heb.strip_cantillations(_get(x, 'w')),
             'pron': x.find('w')['pron'],
             'desc': '{}; {}'.format(_get(x, 'meaning'), _get(x, 'usage')).replace('None; ', '').replace('; None', ''),
             #'xlit': x.find('w')['xlit'],
@@ -90,20 +88,22 @@ def _load_strongs_entries():
     return strongs
 
 
-def _load_word_to_strongs():
-    strongs_map = defaultdict(set)
+def _load_word_to_strongs(heb):
+    # Figure out a unique mapping from word -> strongs-id based on bible-hub scrapings
+    strongs_map = defaultdict(lambda: Counter())
     for path in glob.glob(os.path.join(LEXICON_DIR, 'BibleHubScrape.*.json')):
         with open(path, 'r') as f:
             data = json.load(f)['data']
         for item in data:
             for row in re.findall('<tr>.*?</tr>', item['html'])[1:]:
-                heb = _clean(re.search('<span="hebrew3">([^<]*)</span>', row).group(1))
-                if heb:
-                    strongs_id = re.search('http://strongsnumbers.com/hebrew\/(\w+)\.htm', row).group(1)
-                    strongs_id = 'H' + strongs_id.strip('abcd')  # <- Above strongs version doesn't seem to support
-                    strongs_map[heb].add(strongs_id)             #    these "sub-entries"
-    func = lambda x: (int(x.strip('Habcd')), x[-1])
-    strongs_map = {heb: sorted(ids, key=func) for heb, ids in strongs_map.items()}
+                w = heb.strip_cantillations(re.search('<span="hebrew3">([^<]*)</span>', row).group(1))
+                w = heb.strip_punctuation(w)
+                w = heb.sort_niqqud(w)
+                sid = re.search('http://strongsnumbers.com/hebrew\/(\w+)\.htm', row)
+                if w and sid:
+                    sid = 'H' + sid.group(1).strip('abcd')  # <- HebrewStrong.xml doesn't seem to support
+                    strongs_map[w][sid] += 1                #    these "sub-entries"
+    strongs_map = {w: sorted(counts.items(), key=lambda x: x[1])[-1][0] for w, counts in strongs_map.items()}
     return strongs_map
 
 
