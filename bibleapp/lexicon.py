@@ -14,70 +14,81 @@ _RESOURCES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(_
 class Lexicon(object):
 	"""Wrapper around the Hebrew lexicon."""
 	def __init__(self):
+		self._strongs = None
 		self._lex = None
-		self._refs = None
+		self._lex_root = None
+
+	@property
+	def strongs(self):
+		"""Strongs."""
+		if self._strongs is None:
+			self._strongs = self._load('Strongs.json')
+		return self._strongs
 
 	@property
 	def lex(self):
 		"""Lexicon."""
 		if self._lex is None:
-			path = os.path.join(_RESOURCES_DIR, 'lexicon', 'Lexicon.json')
-			with open(path, 'r') as f:
-				self._lex = json.load(f)
+			self._lex = self._load('Lexicon.json')
 		return self._lex
 
 	@property
-	def refs(self):
-		"""Lexicon."""
-		if self._refs is None:
-			path = os.path.join(_RESOURCES_DIR, 'lexicon', 'References.json')
-			with open(path, 'r') as f:
-				self._refs = json.load(f)
-		return self._refs
+	def lex_root(self):
+		"""Lexicon for root words."""
+		if self._lex_root is None:
+			self._lex_root = self._load('LexiconRoot.json')
+		return self._lex_root
 
 	def description(self, word):
 		"""Return an html-description of the word."""
 		desc = ''
 		lex = self.lex.get(word)
-		refs = self.refs.get(word)
 		if not lex:
 			return "<p>Can't find this word in lexicon.</p>"
 
 		# 1. Google translate and refs
-		root_lex = self.lex.get(lex['root'], {})
-		root_refs = self.refs.get(lex['root'], {})
-		if lex['trans']:
+		lex_root = self.lex_root.get(lex['root'], {})
+		desc += (
+			"<p>Means <em>\"{}\"</em> according to Google and "
+			"appears <strong>{}</strong> times in the Tanakh, first in {}. "
+			.format(lex['trans'], len(lex['refs']), self._make_ref_link(lex['refs'][0]))
+		)
+		if lex['root-trans']:
 			desc += (
-				"<p>Means <em>\"{}\"</em> according to Google and "
-				"appears <strong>{}</strong> times in the Tanakh, first in {}. "
-				.format(lex['trans'], len(refs), self._make_ref_link(refs[0]))
+				"The root word <strong>{}</strong> <em>\"{}\"</em> appears "
+				"<strong>{}</strong> times, first in {}."
+				.format(lex['root'], lex['root-trans'], len(lex_root['refs']), self._make_ref_link(lex_root['refs'][0]))
 			)
-			#root_trans = root.get('trans')
-			#if trans != root_trans:
-			#	refs_same_root = [ref for w in entry['variants'] for ref in self.map.get(w, {}).get('refs', [])]
-			#	refs_same_root = sorted(entry['refs'] + refs_same_root, key=_ref_sort_key)
-			#	desc += (
-			#		"The root word <strong>{}</strong> <em>\"{}\"</em> appears "
-			#		"<strong>{}</strong> times in {} different forms, first in {}."
-			#		.format(entry['root'], root_trans, len(refs_same_root), len(entry['variants']) + 1, self._make_ref_link(refs_same_root[0]))
-			#	)
-			desc += '</p>'
-		else:
-			desc += "<p>Google doesn't know what this means!</p>"
+		desc += '</p>'
 
 		# 2. Strongs
-		if lex['strongs']:
-			item = lex['strongs']
-			desc += "<hr/><p>[{url}] <strong>{word} {pron}</strong> - {desc}</p>".format(
-				word=item['w'], pron=item['pron'], desc=item['desc'], url=_BIBLE_HUB_LINK.format(id=item['id'].strip('H')))
+		hr = '<hr/>'
+		if lex['sid']:
+			desc += hr + self._strongs_str(lex['sid'])
+		other_sids = [sid for sid in lex_root.get('sids', []) if sid != lex['sid']]
+		for sid in other_sids:
+			desc += hr + self._strongs_str(sid)
+			hr = ''
 
 		return desc.replace('<def>', '<em>').replace('</def>', '</em>')
+
+	def _strongs_str(self, sid):
+		entry = self.strongs[sid]
+		url = _BIBLE_HUB_LINK.format(id=entry['id'].strip('H'))
+		return "<p>[{url}] <strong>{word} {pron}</strong> - {desc}</p>".format(
+			word=entry['w'], pron=entry['pron'], desc=entry['desc'], url=url)
 
 	@staticmethod
 	def _make_ref_link(ref):
 		pretty_ref = '{} {}:{}'.format(ref[0].title(), ref[1], ref[2])
 		href = "/search?{}".format(urllib.parse.urlencode({'text': pretty_ref}))
 		return '<a href="{href}">{ref}</a>'.format(ref=pretty_ref, href=href)
+
+	@staticmethod
+	def _load(resource):
+		path = os.path.join(_RESOURCES_DIR, 'lexicon', resource)
+		with open(path, 'r') as f:
+			return json.load(f)
 
 
 def _ref_sort_key(ref):
