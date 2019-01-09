@@ -33,6 +33,7 @@ def run():
     print('2. Loading strongs')
     strongs = _load_strongs(heb)
     word_to_sid = _load_word_to_strongs_id(heb)
+    # TODO: Possibly using the strongs-id as the "root" might be better...
     root_to_sids = defaultdict(set)
     for id_, entry in strongs.items():
         root_to_sids[entry['w-clean']].add(id_)
