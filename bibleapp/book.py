@@ -210,28 +210,26 @@ class Book(object):
 	def _init_content(self):
 		content = []
 		blobs = {}
-		for lan in ['en', 'he']:
+		for lan in ['en', 'he-parsed']:
 			path = os.path.join(_RESOURCES_DIR, 'sefaria', '{}.{}.json'.format(self.name, lan))
 			with open(path, 'r') as f:
 				blobs[lan] = json.load(f)
-		self.he_name = blobs['he']['heTitle']
-		for c, (en_chapter, he_chapter) in enumerate(zip(blobs['en']['text'], blobs['he']['text']), start=1):
+		self.he_name = blobs['he-parsed']['heTitle']
+		for c, (en_chapter, he_chapter) in enumerate(zip(blobs['en']['text'], blobs['he-parsed']['text']), start=1):
 			for v, (en_verse, he_verse) in enumerate(zip(en_chapter, he_chapter), start=1):
-				content.append(Verse(self, c, v, en_verse, he_verse))
+				verse = Verse(self, c, v, en_verse, [Token(*args) for args in he_verse])
+				content.append(verse)
 		return content
 
 
 class Verse(object):
 	"""Verse wrapper."""
-	def __init__(self, book, c, v, english, hebrew):
+	def __init__(self, book, c, v, english, hebrew_tokens):
 		self.book = book
 		self.c = c
 		self.v = v
-		self.english = english
-		for alias in ['the Lord', 'The Lord', 'the LORD', 'The LORD']:
-			self.english = self.english.replace(alias, 'Yahweh')
-		self.hebrew = _HEBREW.strip_cantillations(hebrew)
-		self._he_tokens = None
+		self.english = re.sub('[Tt]he L[Oo][Rr][Dd](?: God)?', 'Yahweh', english)
+		self.he_tokens = hebrew_tokens
 
 	@property
 	def ref(self):
@@ -282,36 +280,21 @@ class Verse(object):
 							tokens[i + j].highlight = True
 		return num
 
-	@property
-	def he_tokens(self):
-		"""Hebrew tokens."""
-		if not self._he_tokens:
-			self._he_tokens = [Token(w, s) for w, s in _HEBREW.split_tokens(self.hebrew)]	
-		return self._he_tokens
-
 
 class Token(object):
 	"""Token wrapper."""
-	def __init__(self, word, space=None):
+	def __init__(self, word, word_space, word_no_vowels, tlit, tlit_space):
 		self.word = word
-		self.word_space = space
-		self.word_no_vowels = _HEBREW.strip_niqqud(self.word)
+		self.word_space = word_space
+		self.word_no_vowels = word_no_vowels
+		self.tlit = tlit
+		self.tlit_space = tlit_space
 		self.highlight = False
 
 	@property
 	def label(self):
 		"""Html label."""
 		return self.word
-
-	@property
-	def tlit(self):
-		"""Transliteration."""
-		return _HEBREW.transliterate(self.word)
-	
-	@property
-	def tlit_space(self):
-		"""Transliteration of space."""
-		return _HEBREW.transliterate(self.word_space)
 
 
 def _make_search_obj(search_str, lang='en'):
