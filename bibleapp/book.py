@@ -58,34 +58,20 @@ class Tanakh():
 			('Ketuvim', '2 Chronicles'),
 		]]
 
-	def get_dropdown(self):
-		"""Get dropdown."""
-		dropdown = []
-		prev_collection = None
-		for book in self.books:
-			if book.collection != prev_collection:
-				prev_collection = book.collection
-				dropdown.append(('div', 'divider', '', ''))
-				dropdown.append(('h5', 'header', book.collection, ''))
-			params = urllib.parse.urlencode({'name': book.name})
-			dropdown.append(('a', 'item', book.name, 'href=/book?{}'.format(params)))
-		return dropdown[1:]
-
 	def get_book(self, alias):
 		"""Get a specific book."""
 		return [book for book in self.books if book.is_match(alias)][0]
 
-	def search(self, search_str, book_filter=None, use='en'):
+	def search(self, search_str, book_filter=None, lang=None):
 		"""Find a word or phrase."""
 		occurrences, verses = 0, []
-		search_obj = _make_search_obj(search_str, use=use)
-		for book in self.books:
-			if not book_filter or book.is_match(book_filter):
-				for verse in book.iter_verses():
-					num = verse.search(search_obj, use=use)
-					if num:
-						occurrences += num
-						verses.append(verse)
+		search_obj = _make_search_obj(search_str)
+		for book in self._iter_books(book_filter):
+			for verse in book.iter_verses():
+				num = verse.search(search_obj, lang=lang)
+				if num:
+					occurrences += num
+					verses.append(verse)
 		return occurrences, verses
 
 	def get_passage(self, passage_str):
@@ -123,6 +109,54 @@ class Tanakh():
 			end   = int(match.group(3)), None
 		if name:
 			return self.get_book(name), start, end
+
+	def pretty_book_filter(self, book_filter):
+		"""Make a pretty string."""
+		if book_filter:
+			pretty_parts = []
+			for part in book_filter.split(','):
+				if '-' in part:
+					start, end = part.split('-')
+					pretty_parts.append('{} - {}'.format(self.get_book(start).name, self.get_book(end).name))
+				else:
+					pretty_parts.append(self.get_book(part).name)
+			pretty = ', '.join(pretty_parts)
+			return ' & '.join(pretty.rsplit(', '))
+		else:
+			return 'the Tanakh'
+
+	def get_dropdown(self):
+		"""Get dropdown."""
+		dropdown = []
+		prev_collection = None
+		for book in self.books:
+			if book.collection != prev_collection:
+				prev_collection = book.collection
+				dropdown.append(('div', 'divider', '', ''))
+				dropdown.append(('h5', 'header', book.collection, ''))
+			params = urllib.parse.urlencode({'name': book.name})
+			dropdown.append(('a', 'item', book.name, 'href=/book?{}'.format(params)))
+		return dropdown[1:]
+
+	def _iter_books(self, book_filter):
+		if book_filter:
+			for part in book_filter.split(','):
+				if '-' in part:
+					start, end = part.split('-')
+					in_range = False
+					for book in self.books:
+						if not in_range and book.is_match(start):
+							in_range = True
+							yield book
+						elif in_range:
+							yield book
+							if book.is_match(end):
+								break
+				else:
+					yield self.get_book(part)
+		else:
+			for book in self.books:
+				yield book
 
 
 class Book(object):
@@ -210,23 +244,24 @@ class Verse(object):
 		return "https://biblehub.com/lexicon/{b}/{c}-{v}.htm".format(
 			b=self.book.bhub, c=self.c, v=self.v)
 
-	def search(self, search_obj, use='en'):
+	def search(self, search_obj, lang='en'):
 		"""Search for an english or transliterated word/phrase."""
+		num = 0
 		if isinstance(search_obj, str):
 			search_obj = _make_search_obj(search_obj)
-		if use == 'en':
-			num = len(search_obj.findall(self.english))
-			if num:
-				self.english = search_obj.sub('<span class="highlight">\g<1></span>', self.english)
 
-		elif use == 'tlit':
-			num = 0
+		if not lang or lang == 'en':
+			num += len(search_obj['en'].findall(self.english))
+			if num:
+				self.english = search_obj['en'].sub('<span class="highlight">\g<1></span>', self.english)
+
+		if not lang or lang == 'he':
 			tokens = self.he_tokens
-			n = len(search_obj)
+			n = len(search_obj['he'])
 			# Just looking for a single word
 			if n == 1:
 				for token in tokens:
-					if search_obj[0] in token.tlit:
+					if search_obj['he'][0] in token.tlit:
 						token.highlight = True
 						num += 1
 			# Looking for multiple words
@@ -234,11 +269,11 @@ class Verse(object):
 				for i in range(len(tokens) - n + 1):
 					for j in range(n):
 						if j == 0:
-							success = tokens[i + j].tlit.endswith(search_obj[j])
+							success = tokens[i + j].tlit.endswith(search_obj['he'][j])
 						elif j < n - 1:
-							success = tokens[i + j].tlit == search_obj[j]
+							success = tokens[i + j].tlit == search_obj['he'][j]
 						else:
-							success = tokens[i + j].tlit.startswith(search_obj[j])
+							success = tokens[i + j].tlit.startswith(search_obj['he'][j])
 						if not success:
 							break
 					if success:
@@ -279,8 +314,8 @@ class Token(object):
 		return _HEBREW.transliterate(self.word_space)
 
 
-def _make_search_obj(search_str, use='en'):
-	if use == 'en':
-		return re.compile('({})'.format(search_str.replace('*', '\S*')), flags=re.IGNORECASE)
-	else:
-		return re.split('[\s\-:]', search_str.lower())
+def _make_search_obj(search_str, lang='en'):
+	return {
+		'en': re.compile('({})'.format(search_str.replace('*', '\S*')), flags=re.IGNORECASE),
+		'he': re.split('[\s\-:]', search_str.lower())
+	}  

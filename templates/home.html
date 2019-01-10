@@ -79,7 +79,7 @@
 
   <!-- ** Home ** -->
   {% if page == 'home' %}
-  <div class="jumbotron jumbotron bg-cover">
+  <div class="jumbotron jumbotron-fluid bg-cover">
     <div class="overlay"></div>
       <div role="main" class="container">
         <h1 class="display-3 mb-1">Welcome!</h1>
@@ -107,6 +107,7 @@
   <!-- ** Chapter or Search Result ** -->
   {% elif page in ['chapter', 'search-result'] %}
   <main role="main" class="container">
+    <!-- Chapter Title -->
     {% if page == 'chapter' %}
     <div class="row">
       <div class="col-lg-12" align="center">
@@ -121,14 +122,18 @@
         </h1>
       </div>
     </div>
+    <!-- Search Title -->
     {% else %}
     <div class="row">
       <div class="col-lg-12" align="center">
         <h1 class="mt-5">{{ title | safe }}</h1>
+        <p>in {{ book_filter }}<br>
+        <small><em>Search took {{ search_time }} seconds</em></small></p>
       </div>
     </div>
     {% endif %}
     <hr/>
+    <!-- Chapter/Search Body -->
     {% for verse in verses %}
     <div class="row">
       <!-- Hebrew -->
@@ -137,7 +142,7 @@
           <bdo dir=rtl>
             <p>
               <strong><a href="{{ verse.bible_hub_url }}" target="_blank">{% if page == 'chapter' %}{{ verse.v }}{% else %}{{ verse.ref }}{% endif %}</a></strong> 
-              <span class="hebrew">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span class="highlight">{% endif %}{{ token.word }}{% if token.highlight %}</span>{% endif %}</a>{{ token.word_space }}{% endfor %}</span>
+              <span class="hebrew">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span style="color: red">{% endif %}{{ token.word }}{% if token.highlight %}</span>{% endif %}</a>{{ token.word_space }}{% endfor %}</span>
             </p>
           </bdo>
           <p>

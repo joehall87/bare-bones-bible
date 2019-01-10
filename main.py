@@ -1,5 +1,6 @@
 import os.path
 import re
+import time
 
 from flask import Flask, render_template, redirect, request, url_for
 
@@ -65,13 +66,23 @@ def search():
     # 2. English or tlit phrase
     occurrences, verses = 0, []
     search_str, options = _extract_options(search_str)
-    if options.get('lan', '').lower() not in {'he', 'heb', 'hebrew', 'tlit', 'translit', 'transliteration'}:
-        occurrences, verses = tanakh.search(search_str, book_filter=options.get('book'), use='en')
-    if not occurrences:
-        occurrences, verses = tanakh.search(search_str, book_filter=options.get('book'), use='tlit')
-    title = '{} <span style="font-size: 75%">occurrences of <span class="highlight">{}</span></span>'.format(occurrences, search_str)
+    book_filter = options.get('book', options.get('books'))
+    lang = {
+        'he': 'he', 
+        'heb': 'he', 
+        'hebrew': 'he',
+        'en': 'en',
+        'eng': 'en',
+        'english': 'en',
+    }.get(options.get('lang'))
+    start_time = time.time()
+    occurrences, verses = tanakh.search(search_str, book_filter=book_filter, lang=lang)
+    search_time = '{:.1f}'.format(time.time() - start_time)
+    title = '{} <span style="font-size: 75%">occurrences of <span class="highlight">{}</span></span>'.format(
+        occurrences, search_str)
     modals = _create_modals(lexicon, verses)
-    return render_template('home.html', page='search-result', title=title, verses=verses, modals=modals, **kw)
+    return render_template('home.html', page='search-result', title=title, verses=verses, modals=modals, 
+        book_filter=tanakh.pretty_book_filter(book_filter), search_time=search_time, **kw)
 
 
 def _extract_options(search_str):
