@@ -20,7 +20,7 @@ def root():
 @app.route('/home')
 def home():
     """Home page."""
-    return render_template('home.html', page='home', dropdown=Tanakh().get_dropdown())
+    return render_template('home.html', page='home')
 
 
 @app.route('/book')
