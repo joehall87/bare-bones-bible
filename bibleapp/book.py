@@ -60,7 +60,10 @@ class Tanakh():
 
 	def get_book(self, alias):
 		"""Get a specific book."""
-		return [book for book in self.books if book.is_match(alias)][0]
+		books = [book for book in self.books if book.is_match(alias)]
+		if not books:
+			raise UnknownBookError('I can\'t find a book matching <strong>"{}"</strong>.<br>Please try again.'.format(alias))
+		return books[0]
 
 	def search(self, search_str, book_filter=None, lang=None):
 		"""Find a word or phrase."""
@@ -108,7 +111,7 @@ class Tanakh():
 			start = int(match.group(2)), None
 			end   = int(match.group(3)), None
 		if name:
-			return self.get_book(name), start, end
+			return name, start, end
 
 	def pretty_book_filter(self, book_filter):
 		"""Make a pretty string."""
@@ -210,12 +213,12 @@ class Book(object):
 	def _init_content(self):
 		content = []
 		blobs = {}
-		for lan in ['en', 'he-parsed']:
+		for lan in ['en-parsed', 'he-parsed']:
 			path = os.path.join(_RESOURCES_DIR, 'sefaria', '{}.{}.json'.format(self.name, lan))
 			with open(path, 'r') as f:
 				blobs[lan] = json.load(f)
 		self.he_name = blobs['he-parsed']['heTitle']
-		for c, (en_chapter, he_chapter) in enumerate(zip(blobs['en']['text'], blobs['he-parsed']['text']), start=1):
+		for c, (en_chapter, he_chapter) in enumerate(zip(blobs['en-parsed']['text'], blobs['he-parsed']['text']), start=1):
 			for v, (en_verse, he_verse) in enumerate(zip(en_chapter, he_chapter), start=1):
 				verse = Verse(self, c, v, en_verse, [Token(*args) for args in he_verse])
 				content.append(verse)
@@ -228,7 +231,7 @@ class Verse(object):
 		self.book = book
 		self.c = c
 		self.v = v
-		self.english = re.sub('[Tt]he L[Oo][Rr][Dd](?: God)?', 'Yahweh', english)
+		self.english = english
 		self.he_tokens = hebrew_tokens
 
 	@property
@@ -297,8 +300,12 @@ class Token(object):
 		return self.word
 
 
+class UnknownBookError(Exception):
+	pass
+
+
 def _make_search_obj(search_str, lang='en'):
 	return {
-		'en': re.compile('({})'.format(search_str.replace('*', '\S*')), flags=re.IGNORECASE),
+		'en': re.compile('({})'.format(search_str.replace('*', '\S*').replace('.', '\\.')), flags=re.IGNORECASE),
 		'he': re.split('[\s\-:]', search_str.lower())
 	}  

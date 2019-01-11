@@ -71,7 +71,7 @@
       </ul>
       <!-- Searching -->
       <form class="form-inline my-2 my-lg-0" action="/search">
-        <input class="form-control mr-sm-2" name="text" type="search" placeholder="Verse or Phrase" aria-label="Search">
+        <input class="form-control mr-sm-2" name="text" type="search" aria-label="Search" placeholder="Verse or Phrase" {% if search_value %}value="{{ search_value }}"{% endif %}>
         <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
       </form>
     </div>
@@ -84,6 +84,17 @@
       <div role="main" class="container">
         <h1 class="display-3 mb-1">Welcome!</h1>
         <p class="lead">Want a new way to engage with the Hebrew scriptures?<br>Look no further!<br>Enjoy browsing by book, or looking up words.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ** Home ** -->
+  {% elif page == 'error' %}
+  <div class="jumbotron jumbotron-fluid bg-cover">
+    <div class="overlay"></div>
+      <div role="main" class="container">
+        <h1 class="display-3 mb-1">Uh oh!</h1>
+        <p class="lead">{{ msg | safe }}</p>
       </div>
     </div>
   </div>
@@ -127,8 +138,8 @@
     <div class="row">
       <div class="col-lg-12" align="center">
         <h1 class="mt-5">{{ title | safe }}</h1>
-        <p>in {{ book_filter }}<br>
-        <small><em>Search took {{ search_time }} seconds</em></small></p>
+        <h5>in {{ book_filter }}</h5>
+        <p><small><em>Search took {{ search_time }} seconds</em></small></p>
       </div>
     </div>
     {% endif %}
@@ -177,7 +188,7 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="{{ token.label }}-label">
-              <span class="hebrew">{{ token.word }}</span> &ndash; <a href="/search?text={{ token.tlit }}">{{ token.tlit }}</a>
+              <span class="hebrew">{{ token.word }}</span> &ndash; <a href="/search?text={{ token.tlit }}+lang%3Aheb">{{ token.tlit }}</a>
             </h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>

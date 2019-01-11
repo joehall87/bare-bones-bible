@@ -11,27 +11,35 @@ from bibleapp.hebrew import Hebrew
 
 
 _SEFARIA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'resources', 'sefaria')
+_HEBREW = Hebrew()
 
 
 def run():
 	"""Create and store tokenised/transliterated hebrew."""
-	heb = Hebrew()
-	for path in glob.glob(os.path.join(_SEFARIA_DIR, '*.he.json')):
-		print('Parsing {}'.format(path))
-		with open(path, 'r') as f:
-			blob = json.load(f)
-		blob['text'] = [[list(_parse_verse(verse, heb)) for verse in chapter] for chapter in blob['text']]
-		with open(path.replace('.he.', '.he-parsed.'), 'w') as f:
-			json.dump(blob, f)
+	for lan, fix_func in [('he', _tokenise_he_verse), ('en', _fix_en_verse)]:
+		for path in glob.glob(os.path.join(_SEFARIA_DIR, '*.{}.json'.format(lan))):
+			print('Parsing {}'.format(path))
+			with open(path, 'r') as f:
+				blob = json.load(f)
+			blob['text'] = [[fix_func(verse) for verse in chapter] for chapter in blob['text']]
+			with open(path.replace('.{}.'.format(lan), '.{}-parsed.'.format(lan)), 'w') as f:
+				json.dump(blob, f)
 
 
-def _parse_verse(verse, heb):
-	verse = heb.strip_cantillations(verse)
-	for w, ws in heb.split_tokens(verse):
-		wn = heb.strip_niqqud(w)
-		tlit = heb.transliterate(w)
-		tlit_s = heb.transliterate(ws)
-		yield w, ws, wn, tlit, tlit_s
+def _fix_en_verse(verse):
+	return re.sub('[Tt]he L[Oo][Rr][Dd](?: God)?', 'Yahweh', verse)
+
+
+def _tokenise_he_verse(verse):
+	tokens = []
+	verse = verse.replace('\u200d', '')  # Random "zero-width joiners"!
+	verse = _HEBREW.strip_cantillations(verse)
+	for w, ws in _HEBREW.split_tokens(verse):
+		wn = _HEBREW.strip_niqqud(w)
+		tlit = _HEBREW.transliterate(w)
+		tlit_s = _HEBREW.transliterate(ws)
+		tokens.append((w, ws, wn, tlit, tlit_s))
+	return tokens
 
 
 if __name__ == '__main__':

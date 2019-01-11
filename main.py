@@ -4,7 +4,7 @@ import time
 
 from flask import Flask, render_template, redirect, request, url_for
 
-from bibleapp.book import Tanakh
+from bibleapp.book import Tanakh, UnknownBookError
 from bibleapp.lexicon import Lexicon
 
 
@@ -28,10 +28,13 @@ def book():
     """Show book."""
     tanakh = Tanakh()
     lexicon = Lexicon()
-    print(request.args['name'])
-    book = tanakh.get_book(request.args['name'])
+    kw = {'dropdown': tanakh.get_dropdown()}
+    try:
+        kw['book'] = tanakh.get_book(request.args['name'])
+    except UnknownBookError as e:
+        return render_template('home.html', page='error', msg=str(e), **kw)
+
     chapter = request.args.get('chapter')
-    kw = {'book': book, 'dropdown': tanakh.get_dropdown()}
     if not chapter:
         return render_template('home.html', page='chapter-select', **kw)
     else:
@@ -47,13 +50,17 @@ def search():
     """Search for a range of text."""
     tanakh = Tanakh()
     lexicon = Lexicon()
-    kw = {'dropdown': tanakh.get_dropdown()}
     search_str = request.args['text'].strip()
+    kw = {'dropdown': tanakh.get_dropdown(), 'search_value': search_str}
 
     # 1. Passage
     passage = tanakh.get_passage(search_str)
     if passage:
-        book, start, end = passage
+        name, start, end = passage
+        try:
+            book = tanakh.get_book(name)
+        except UnknownBookError as e:
+            return render_template('home.html', page='error', msg=str(e), **kw)
         verses = list(book.iter_verses(start, end))
         modals = _create_modals(lexicon, verses)
         kw.update({'verses': verses, 'modals': modals})
@@ -74,9 +81,12 @@ def search():
         'en': 'en',
         'eng': 'en',
         'english': 'en',
-    }.get(options.get('lang'))
+    }.get(options.get('lang', options.get('lan')))
     start_time = time.time()
-    occurrences, verses = tanakh.search(search_str, book_filter=book_filter, lang=lang)
+    try:
+        occurrences, verses = tanakh.search(search_str, book_filter=book_filter, lang=lang)
+    except UnknownBookError as e:
+        return render_template('home.html', page='error', msg=str(e), **kw)
     search_time = '{:.1f}'.format(time.time() - start_time)
     title = '{} <span style="font-size: 75%">occurrences of <span class="highlight">{}</span></span>'.format(
         occurrences, search_str)
