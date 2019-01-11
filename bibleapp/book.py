@@ -128,19 +128,6 @@ class Tanakh():
 		else:
 			return 'the Tanakh'
 
-	def get_dropdown(self):
-		"""Get dropdown."""
-		dropdown = []
-		prev_collection = None
-		for book in self.books:
-			if book.collection != prev_collection:
-				prev_collection = book.collection
-				dropdown.append(('div', 'divider', '', ''))
-				dropdown.append(('h5', 'header', book.collection, ''))
-			params = urllib.parse.urlencode({'name': book.name})
-			dropdown.append(('a', 'item', book.name, 'href=/book?{}'.format(params)))
-		return dropdown[1:]
-
 	def _iter_books(self, book_filter):
 		if book_filter:
 			for part in book_filter.split(','):
