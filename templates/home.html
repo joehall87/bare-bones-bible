@@ -63,9 +63,50 @@
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="booksDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Books</a>
             <ul class="dropdown-menu scrollable-menu" aria-labelledby="booksDropdown">
-              {% for tag, dtype, name, attrs in dropdown %}
-              <li><{{tag}} class="dropdown-{{dtype}}" {{attrs}}>{{name}}</{{tag}}></li>
-              {% endfor %}
+              <li><h5 class="dropdown-header">Torah</h5></li>
+              <li><a class="dropdown-item" href=/book?name=Genesis>Genesis</a></li>
+              <li><a class="dropdown-item" href=/book?name=Exodus>Exodus</a></li>
+              <li><a class="dropdown-item" href=/book?name=Leviticus>Leviticus</a></li>
+              <li><a class="dropdown-item" href=/book?name=Numbers>Numbers</a></li>
+              <li><a class="dropdown-item" href=/book?name=Deuteronomy>Deuteronomy</a></li>
+              <li><div class="dropdown-divider"></div></li>
+              <li><h5 class="dropdown-header">Neviim</h5></li>
+              <li><a class="dropdown-item" href=/book?name=Joshua>Joshua</a></li>
+              <li><a class="dropdown-item" href=/book?name=Judges>Judges</a></li>
+              <li><a class="dropdown-item" href=/book?name=1+Samuel>1 Samuel</a></li>
+              <li><a class="dropdown-item" href=/book?name=2+Samuel>2 Samuel</a></li>
+              <li><a class="dropdown-item" href=/book?name=1+Kings>1 Kings</a></li>
+              <li><a class="dropdown-item" href=/book?name=2+Kings>2 Kings</a></li>
+              <li><a class="dropdown-item" href=/book?name=Isaiah>Isaiah</a></li>
+              <li><a class="dropdown-item" href=/book?name=Jeremiah>Jeremiah</a></li>
+              <li><a class="dropdown-item" href=/book?name=Ezekiel>Ezekiel</a></li>
+              <li><a class="dropdown-item" href=/book?name=Hosea>Hosea</a></li>
+              <li><a class="dropdown-item" href=/book?name=Joel>Joel</a></li>
+              <li><a class="dropdown-item" href=/book?name=Amos>Amos</a></li>
+              <li><a class="dropdown-item" href=/book?name=Obadiah>Obadiah</a></li>
+              <li><a class="dropdown-item" href=/book?name=Jonah>Jonah</a></li>
+              <li><a class="dropdown-item" href=/book?name=Micah>Micah</a></li>
+              <li><a class="dropdown-item" href=/book?name=Nahum>Nahum</a></li>
+              <li><a class="dropdown-item" href=/book?name=Habakkuk>Habakkuk</a></li>
+              <li><a class="dropdown-item" href=/book?name=Zephaniah>Zephaniah</a></li>
+              <li><a class="dropdown-item" href=/book?name=Haggai>Haggai</a></li>
+              <li><a class="dropdown-item" href=/book?name=Zechariah>Zechariah</a></li>
+              <li><a class="dropdown-item" href=/book?name=Malachi>Malachi</a></li>
+              <li><div class="dropdown-divider"></div></li>
+              <li><h5 class="dropdown-header">Ketuvim</h5></li>
+              <li><a class="dropdown-item" href=/book?name=Psalms>Psalms</a></li>
+              <li><a class="dropdown-item" href=/book?name=Proverbs>Proverbs</a></li>
+              <li><a class="dropdown-item" href=/book?name=Job>Job</a></li>
+              <li><a class="dropdown-item" href=/book?name=Song+of+Songs>Song of Songs</a></li>
+              <li><a class="dropdown-item" href=/book?name=Ruth>Ruth</a></li>
+              <li><a class="dropdown-item" href=/book?name=Lamentations>Lamentations</a></li>
+              <li><a class="dropdown-item" href=/book?name=Ecclesiastes>Ecclesiastes</a></li>
+              <li><a class="dropdown-item" href=/book?name=Esther>Esther</a></li>
+              <li><a class="dropdown-item" href=/book?name=Daniel>Daniel</a></li>
+              <li><a class="dropdown-item" href=/book?name=Ezra>Ezra</a></li>
+              <li><a class="dropdown-item" href=/book?name=Nehemiah>Nehemiah</a></li>
+              <li><a class="dropdown-item" href=/book?name=1+Chronicles>1 Chronicles</a></li>
+              <li><a class="dropdown-item" href=/book?name=2+Chronicles>2 Chronicles</a></li>
             </ul>
         </li>
       </ul>
@@ -88,7 +129,7 @@
     </div>
   </div>
 
-  <!-- ** Home ** -->
+  <!-- ** Error ** -->
   {% elif page == 'error' %}
   <div class="jumbotron jumbotron-fluid bg-cover">
     <div class="overlay"></div>

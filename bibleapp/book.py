@@ -259,28 +259,15 @@ class Verse(object):
 		if not lang or lang == 'he':
 			tokens = self.he_tokens
 			n = len(search_obj['he'])
-			# Just looking for a single word
-			if n == 1:
-				for token in tokens:
-					if search_obj['he'][0] in token.tlit:
-						token.highlight = True
-						num += 1
-			# Looking for multiple words
-			else:
-				for i in range(len(tokens) - n + 1):
+			for i in range(len(tokens) - n + 1):
+				for j, obj in enumerate(search_obj['he']):
+					success = obj.match(tokens[i + j].tlit)
+					if not success:
+						break
+				if success:
+					num += 1
 					for j in range(n):
-						if j == 0:
-							success = tokens[i + j].tlit.endswith(search_obj['he'][j])
-						elif j < n - 1:
-							success = tokens[i + j].tlit == search_obj['he'][j]
-						else:
-							success = tokens[i + j].tlit.startswith(search_obj['he'][j])
-						if not success:
-							break
-					if success:
-						num += 1
-						for j in range(n):
-							tokens[i + j].highlight = True
+						tokens[i + j].highlight = True
 		return num
 
 
@@ -300,12 +287,17 @@ class Token(object):
 		return self.word
 
 
+def _make_search_obj(search_str, lang='en'):
+	search_str = search_str.replace('.', '\\.')
+	en_re_expr = re.compile('({})'.format(search_str.replace('*', '\S*')), flags=re.IGNORECASE)
+	he_re_list = []
+	for term in re.split('[\s\-:]', search_str.lower()):
+		he_re_list.append(re.compile(term.replace('*', '.*')))
+	return {
+		'en': en_re_expr,
+		'he': he_re_list,
+	}  
+
+
 class UnknownBookError(Exception):
 	pass
-
-
-def _make_search_obj(search_str, lang='en'):
-	return {
-		'en': re.compile('({})'.format(search_str.replace('*', '\S*').replace('.', '\\.')), flags=re.IGNORECASE),
-		'he': re.split('[\s\-:]', search_str.lower())
-	}  

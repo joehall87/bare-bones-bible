@@ -26,41 +26,57 @@ def home():
 @app.route('/book')
 def book():
     """Show book."""
-    tanakh = Tanakh()
-    lexicon = Lexicon()
-    kw = {'dropdown': tanakh.get_dropdown()}
-    try:
-        kw['book'] = tanakh.get_book(request.args['name'])
-    except UnknownBookError as e:
-        return render_template('home.html', page='error', msg=str(e), **kw)
-
+    name = request.args['name']
     chapter = request.args.get('chapter')
-    if not chapter:
-        return render_template('home.html', page='chapter-select', **kw)
-    else:
-        c = int(chapter)
-        title = '{} {}'.format(book.name, c)
-        verses = list(book.iter_verses((c, None), (c, None)))
-        modals = _create_modals(lexicon, verses)
-        return render_template('home.html', page='chapter', chapter=c, verses=verses, modals=modals, **kw)
+    try:
+        return _make_chapter(name, int(chapter)) if chapter else _make_chapter_select(name)
+    except UnknownBookError as e:
+        return render_template('home.html', page='error', msg=str(e))
 
 
 @app.route('/search')
 def search():
     """Search for a range of text."""
+    search_str = request.args['text'].strip()
+    try:
+        return _search(search_str)
+    except UnknownBookError as e:
+        return render_template('home.html', page='error', msg=str(e))
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    """Nice 404 error."""
+    return render_template('home.html', page='error', msg="That page doesn't exist!"), 404
+
+
+def _make_chapter(name, chapter):
     tanakh = Tanakh()
     lexicon = Lexicon()
-    search_str = request.args['text'].strip()
-    kw = {'dropdown': tanakh.get_dropdown(), 'search_value': search_str}
+    book = tanakh.get_book(name)
+    title = '{} {}'.format(book.name, chapter)
+    verses = list(book.iter_verses((chapter, None), (chapter, None)))
+    modals = _create_modals(lexicon, verses)
+    return render_template('home.html', page='chapter', book=book, chapter=chapter, verses=verses, modals=modals)
+
+
+def _make_chapter_select(name):
+    tanakh = Tanakh()
+    book = tanakh.get_book(name)
+    return render_template('home.html', page='chapter-select', book=book)
+
+
+def _search(search_str):
+    tanakh = Tanakh()
+    lexicon = Lexicon()
+    kw = {'search_value': search_str}
+    search_str, options = _extract_options(search_str)
 
     # 1. Passage
     passage = tanakh.get_passage(search_str)
     if passage:
         name, start, end = passage
-        try:
-            book = tanakh.get_book(name)
-        except UnknownBookError as e:
-            return render_template('home.html', page='error', msg=str(e), **kw)
+        book = tanakh.get_book(name)
         verses = list(book.iter_verses(start, end))
         modals = _create_modals(lexicon, verses)
         kw.update({'verses': verses, 'modals': modals})
@@ -72,7 +88,6 @@ def search():
 
     # 2. English or tlit phrase
     occurrences, verses = 0, []
-    search_str, options = _extract_options(search_str)
     book_filter = options.get('book', options.get('books'))
     lang = {
         'he': 'he', 
@@ -83,10 +98,7 @@ def search():
         'english': 'en',
     }.get(options.get('lang', options.get('lan')))
     start_time = time.time()
-    try:
-        occurrences, verses = tanakh.search(search_str, book_filter=book_filter, lang=lang)
-    except UnknownBookError as e:
-        return render_template('home.html', page='error', msg=str(e), **kw)
+    occurrences, verses = tanakh.search(search_str, book_filter=book_filter, lang=lang)
     search_time = '{:.1f}'.format(time.time() - start_time)
     title = '{} <span style="font-size: 75%">occurrences of <span class="highlight">{}</span></span>'.format(
         occurrences, search_str)
