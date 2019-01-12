@@ -8,46 +8,7 @@
   <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="static/style.css">
   <link href="https://fonts.googleapis.com/css?family=David+Libre|Montserrat" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Montserrat', sans-serif;;
-    }
-    /* Hebrew highlighting */
-    .hebrew {
-      font-family: 'David Libre', serif;
-      font-size: 180%;
-    }
-    .hebrew a {
-      /* See https://fonts.google.com/?subset=hebrew for other options */
-      /*font-family: Arimo, sans-serif;*/
-      /*font-family: 'Frank Ruhl Libre', serif;*/
-      color: black;
-      text-decoration: none;  /* Avoid underline on hover */
-    }
-    .hebrew a:hover {
-      text-shadow: 2px 2px 10px #00FF00;
-    }
-    /* Transliteration */
-    .translit {
-      font-size: 85%;
-      font-style: italic;
-    }
-    .translit a {
-      color: black;
-      text-decoration: none;  /* Avoid underline on hover */
-    }
-    .translit a:hover {
-      text-shadow: 2px 2px 10px #00FF00;
-    }
-    /* Search-result highlighting */
-    .highlight {
-      color: red;
-      font-weight: bold;
-    }
-    .chapter-button {
-      border-color: #D3D3D3;
-    }
-  </style>
+  <style></style>
 </head>
 <body>
   <!-- ** Navbar ** -->
@@ -126,23 +87,22 @@
 
   <!-- ** Home ** -->
   {% if page == 'home' %}
-  <div class="jumbotron jumbotron-fluid bg-cover">
-    <div class="overlay"></div>
-      <div role="main" class="container">
-        <h1 class="display-3 mb-1">Welcome!</h1>
-        <p class="lead">Want a new way to engage with the Hebrew scriptures?<br>Look no further!<br>Enjoy browsing by book, or looking up words.</p>
-      </div>
+  <div class="jumbotron bg-cover">
+    <div role="main" class="container">
+      <h1 class="display-3">Hello!</h1>
+      <p class="lead">The Bare Bones Bible is an awesome (and pretty) tool to help you engage with the Hebrew scriptures.</p>
+      <p class="lead">
+        <a href="book?name=Genesis&chapter=1" role="button" class="btn btn-primary btn-lg">Dive in!</a>
+      </p>
     </div>
   </div>
 
   <!-- ** Error ** -->
   {% elif page == 'error' %}
-  <div class="jumbotron jumbotron-fluid bg-cover">
-    <div class="overlay"></div>
-      <div role="main" class="container">
-        <h1 class="display-3 mb-1">Uh oh!</h1>
-        <p class="lead">{{ msg | safe }}</p>
-      </div>
+  <div class="jumbotron bg-cover">
+    <div role="main" class="container">
+      <h1 class="display-3 mb-1">Uh oh!</h1>
+      <p class="lead">{{ msg | safe }}</p>
     </div>
   </div>
 

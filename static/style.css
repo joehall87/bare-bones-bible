@@ -1,3 +1,9 @@
+/* Body */
+body {
+  font-family: 'Montserrat', sans-serif;
+  min-height: 75rem;
+  padding-top: 3rem;
+}
 /* Jumbotron */
 .jumbotron {
   text-align: center;
@@ -6,36 +12,20 @@
   opacity: 1.0;
 }
 .bg-cover {
-  background-size: cover;
-  color: white;
+  background-image: linear-gradient(
+    rgba(20,20,20, .5), rgba(20,20,20, .5)), url('/static/dead-sea1.jpg');
   background-position: center center;
   position: relative;
-  z-index: -2;
-}
-.overlay {
-  background-color: #000;
-  opacity: 0.5;
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  z-index: -1;
-}
-.bg-cover {
-    background-image: url('/static/dead-sea1.jpg');
+  background-size: cover;
+  color: white;
 }
 /* Fixed navbar */
-body {
-  min-height: 75rem;
-  padding-top: 3rem;
-}
 .scrollable-menu {
   height: auto;
   max-height: 400px;
   overflow-x: hidden;
 }
-/* Word highlighting */
+/* Hebrew highlighting */
 .hebrew {
   font-family: 'David Libre', serif;
   font-size: 180%;
@@ -48,8 +38,7 @@ body {
   text-decoration: none;  /* Avoid underline on hover */
 }
 .hebrew a:hover {
-  text-shadow: 2px 2px 10px #00FF00;
-  /*background: #FFFF00;*/
+  text-shadow: 2px 2px 10px #007BFF;
 }
 /* Transliteration */
 .translit {
@@ -61,9 +50,14 @@ body {
   text-decoration: none;  /* Avoid underline on hover */
 }
 .translit a:hover {
-  text-shadow: 2px 2px 10px #00FF00;
+  text-shadow: 2px 2px 10px #007BFF;
 }
-/* Chapter button */
+/* Search-result highlighting */
+.highlight {
+  color: red;
+  font-weight: bold;
+}
 .chapter-button {
   width: 60px;
+  border-color: #D3D3D3;
 }
