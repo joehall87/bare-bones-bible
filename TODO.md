@@ -1,7 +1,5 @@
 # TODO
 Here are the improvements I would like to make before advertising:
-- Pagination of search-results
-- Fix versification diff
 - Make a mini how-to guide on home-page
 
 And less important ones

@@ -3,7 +3,6 @@ import os
 import os.path
 import pickle
 import re
-import urllib.parse
 
 from .hebrew import Hebrew
 
@@ -18,48 +17,10 @@ with open(os.path.join(_RESOURCES_DIR, 'versification', 'versification.pickle'),
 
 class Tanakh():
 	"""Wrapper around all books in Tanakh."""
-	def __init__(self):
-		self.books = [Book(x[0], x[1], bhub=x[2] if len(x) > 2 else None) for x in [
-			('Torah', 'Genesis'),
-			('Torah', 'Exodus'),
-			('Torah', 'Leviticus'),
-			('Torah', 'Numbers'),
-			('Torah', 'Deuteronomy'),
-			('Neviim', 'Joshua'),
-			('Neviim', 'Judges'),
-			('Neviim', '1 Samuel'),
-			('Neviim', '2 Samuel'),
-			('Neviim', '1 Kings'),
-			('Neviim', '2 Kings'),
-			('Neviim', 'Isaiah'),
-			('Neviim', 'Jeremiah'),
-			('Neviim', 'Ezekiel'),
-			('Neviim', 'Hosea'),
-			('Neviim', 'Joel'),
-			('Neviim', 'Amos'),
-			('Neviim', 'Obadiah'),
-			('Neviim', 'Jonah'),
-			('Neviim', 'Micah'),
-			('Neviim', 'Nahum'),
-			('Neviim', 'Habakkuk'),
-			('Neviim', 'Zephaniah'),
-			('Neviim', 'Haggai'),
-			('Neviim', 'Zechariah'),
-			('Neviim', 'Malachi'),
-			('Ketuvim', 'Psalms'),
-			('Ketuvim', 'Proverbs'),
-			('Ketuvim', 'Job'),
-			('Ketuvim', 'Song of Songs', 'songs'),
-			('Ketuvim', 'Ruth'),
-			('Ketuvim', 'Lamentations'),
-			('Ketuvim', 'Ecclesiastes'),
-			('Ketuvim', 'Esther'),
-			('Ketuvim', 'Daniel'),
-			('Ketuvim', 'Ezra'),
-			('Ketuvim', 'Nehemiah'),
-			('Ketuvim', '1 Chronicles'),
-			('Ketuvim', '2 Chronicles'),
-		]]
+	@property
+	def books(self):
+		"""Make books lazy to free-up mem."""
+		return [Book(x[0], x[1], bhub=x[2] if len(x) > 2 else None) for x in _BOOKS]
 
 	def get_book(self, alias):
 		"""Get a specific book."""
@@ -296,3 +257,46 @@ def _make_search_obj(search_str, lang='en'):
 
 class UnknownBookError(Exception):
 	pass
+
+
+_BOOKS = [
+	('Torah', 'Genesis'),
+	('Torah', 'Exodus'),
+	('Torah', 'Leviticus'),
+	('Torah', 'Numbers'),
+	('Torah', 'Deuteronomy'),
+	('Neviim', 'Joshua'),
+	('Neviim', 'Judges'),
+	('Neviim', '1 Samuel'),
+	('Neviim', '2 Samuel'),
+	('Neviim', '1 Kings'),
+	('Neviim', '2 Kings'),
+	('Neviim', 'Isaiah'),
+	('Neviim', 'Jeremiah'),
+	('Neviim', 'Ezekiel'),
+	('Neviim', 'Hosea'),
+	('Neviim', 'Joel'),
+	('Neviim', 'Amos'),
+	('Neviim', 'Obadiah'),
+	('Neviim', 'Jonah'),
+	('Neviim', 'Micah'),
+	('Neviim', 'Nahum'),
+	('Neviim', 'Habakkuk'),
+	('Neviim', 'Zephaniah'),
+	('Neviim', 'Haggai'),
+	('Neviim', 'Zechariah'),
+	('Neviim', 'Malachi'),
+	('Ketuvim', 'Psalms'),
+	('Ketuvim', 'Proverbs'),
+	('Ketuvim', 'Job'),
+	('Ketuvim', 'Song of Songs', 'songs'),
+	('Ketuvim', 'Ruth'),
+	('Ketuvim', 'Lamentations'),
+	('Ketuvim', 'Ecclesiastes'),
+	('Ketuvim', 'Esther'),
+	('Ketuvim', 'Daniel'),
+	('Ketuvim', 'Ezra'),
+	('Ketuvim', 'Nehemiah'),
+	('Ketuvim', '1 Chronicles'),
+	('Ketuvim', '2 Chronicles'),
+]
