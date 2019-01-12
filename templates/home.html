@@ -191,12 +191,15 @@
       <!-- Hebrew -->
       <div class="col-lg-6">
         <div class="text-right">
-          <bdo dir=rtl>
-            <p>
-              <strong><a href="{{ verse.bible_hub_url }}" target="_blank">{% if page == 'chapter' %}{{ verse.v }}{% else %}{{ verse.ref }}{% endif %}</a></strong> 
+          <p>
+            <bdo dir=rtl>
+              <bdo dir=ltr>
+                <strong><a href="{{ verse.bible_hub_url }}" target="_blank">{{ verse.ref(page == 'chapter') | safe }}</a></strong> 
+              </bdo>
+              &nbsp;
               <span class="hebrew">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span style="color: red">{% endif %}{{ token.word }}{% if token.highlight %}</span>{% endif %}</a>{{ token.word_space }}{% endfor %}</span>
-            </p>
-          </bdo>
+            </bdo>
+          </p>
           <p>
             <span class="translit">{% for token in verse.he_tokens %}<a {% if token.highlight %}class="highlight"{% endif %}href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span class="highlight">{% endif %}{{ token.tlit }}{% if token.highlight %}</span>{% endif %}</a>{{ token.tlit_space }}{% endfor %}</span>
           </p>

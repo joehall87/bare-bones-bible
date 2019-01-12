@@ -1,6 +1,7 @@
 import json
 import os
 import os.path
+import pickle
 import re
 import urllib.parse
 
@@ -11,6 +12,8 @@ _RESOURCES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(_
 
 
 _HEBREW = Hebrew()
+with open(os.path.join(_RESOURCES_DIR, 'versification', 'versification.pickle'), 'rb') as f:
+	_VERSIFICATION = pickle.load(f)
 
 
 class Tanakh():
@@ -185,7 +188,7 @@ class Book(object):
 	@property
 	def num_chapters(self):
 		"""Num chapters in book."""
-		return self.content[-1].c
+		return _VERSIFICATION[self.name]['num-chapters']
 
 	def iter_verses(self, cv_start=None, cv_end=None):
 		"""Iterate over verses"""
@@ -221,16 +224,21 @@ class Verse(object):
 		self.english = english
 		self.he_tokens = hebrew_tokens
 
-	@property
-	def ref(self):
+	def ref(self, verse_only=False):
 		"""Pretty reference."""
-		return '{} {}:{}'.format(self.book.ref, self.c, self.v)
+		suffix = _VERSIFICATION[self.book.name]['en-disp'].get((self.c, self.v), '')
+		if suffix:
+			suffix = '<small>({})</small>'.format(suffix)
+		if verse_only:
+			return '{}{}'.format(self.v, suffix)
+		else:
+			return '{} {}:{}{}'.format(self.book.ref, self.c, self.v, suffix)
 
 	@property
 	def bible_hub_url(self):
 		"""The bible-hub url."""
-		return "https://biblehub.com/lexicon/{b}/{c}-{v}.htm".format(
-			b=self.book.bhub, c=self.c, v=self.v)
+		c, v = _VERSIFICATION[self.book.name]['en-map'].get((self.c, self.v), (self.c, self.v))
+		return "https://biblehub.com/lexicon/{b}/{c}-{v}.htm".format(b=self.book.bhub, c=c, v=v)
 
 	def search(self, search_obj, lang='en'):
 		"""Search for an english or transliterated word/phrase."""
@@ -283,7 +291,7 @@ def _make_search_obj(search_str, lang='en'):
 	return {
 		'en': en_re_expr,
 		'he': he_re_list,
-	}  
+	}
 
 
 class UnknownBookError(Exception):

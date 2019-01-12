@@ -112,7 +112,7 @@ def _extract_options(search_str):
     new_str_list = []
     for part in search_str.split():
         kv = part.split(':')
-        if len(kv) == 2 and kv[0] and kv[1]:
+        if len(kv) == 2 and kv[0].lower() in {'book', 'books', 'lan', 'lang'}:
             options[kv[0].lower()] = kv[1]
         else:
             new_str_list.append(part)
