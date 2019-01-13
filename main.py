@@ -57,11 +57,10 @@ def page_not_found(e):
 
 def _make_chapter(name, chapter):
     tanakh = Tanakh()
-    lexicon = Lexicon()
     book = tanakh.get_book(name)
     title = '{} {}'.format(book.name, chapter)
     verses = list(book.iter_verses((chapter, None), (chapter, None)))
-    modals = _create_modals(lexicon, verses)
+    modals = _create_modals(verses)
     return render_template('home.html', page='chapter', book=book, chapter=chapter, verses=verses, modals=modals)
 
 
@@ -73,7 +72,6 @@ def _make_chapter_select(name):
 
 def _search(search_str, pag_page):
     tanakh = Tanakh()
-    lexicon = Lexicon()
     kw = {'search_value': search_str}
     search_str, options = _extract_options(search_str)
 
@@ -83,7 +81,7 @@ def _search(search_str, pag_page):
         name, start, end = passage
         book = tanakh.get_book(name)
         verses = list(book.iter_verses(start, end))
-        modals = _create_modals(lexicon, verses)
+        modals = _create_modals(verses)
         kw.update({'verses': verses, 'modals': modals})
         if start[0] == end[0] and start[1] is None and end[1] is None:
             return render_template('home.html', page='chapter', book=book, chapter=start[0], **kw)
@@ -102,13 +100,15 @@ def _search(search_str, pag_page):
         'eng': 'en',
         'english': 'en',
     }.get(options.get('lang', options.get('lan')))
-    occurrences, verses = tanakh.search(search_str, book_filter=book_filter, lang=lang)
+    start = (pag_page - 1) * SEARCH_LIMIT
+    end = pag_page * SEARCH_LIMIT
+    num_occurrences, num_verses, verses = tanakh.search(search_str, start=start, end=end, book_filter=book_filter, lang=lang)
     title = '{} <span style="font-size: 75%">occurrences of <span class="highlight">{}</span></span>'.format(
-        occurrences, search_str)
-    modals = _create_modals(lexicon, verses)
-    verses = _paginate(verses, pag_page, kw)
+        num_occurrences, search_str)
+    modals = _create_modals(verses)
+    pagination = _paginate(pag_page, num_verses, kw['search_value'])
     return render_template('home.html', page='search-result', title=title, verses=verses, modals=modals, 
-        book_filter=tanakh.pretty_book_filter(book_filter), **kw)
+        book_filter=tanakh.pretty_book_filter(book_filter), pagination=pagination, **kw)
 
 
 def _extract_options(search_str):
@@ -142,7 +142,8 @@ def _pretty_passage(book, start, end):
     return passage
 
 
-def _create_modals(lexicon, verses):
+def _create_modals(verses):
+    lexicon = Lexicon()
     modals, used = [], set()
     for verse in verses:
         for token in verse.he_tokens:
@@ -153,36 +154,28 @@ def _create_modals(lexicon, verses):
     return modals
 
 
-def _paginate(verses, pag_page, kw):
-    if len(verses) <= SEARCH_LIMIT:
-        return verses
-
-    n = len(verses)
-    start = (pag_page - 1) * SEARCH_LIMIT
-    end = min(pag_page * SEARCH_LIMIT, n)
-    verses = verses[start:end]
-
-    n_pages = int(math.ceil(n / SEARCH_LIMIT))
-    pagination = []
-    href_func = lambda pg: "/search?{}".format(urllib.parse.urlencode({'text': kw['search_value'], 'page': pg}))
-    for i in range(1, n_pages + 1):
-        pagination.append({
-            'symbol': i,
-            'class': 'active' if i == pag_page else '',
-            'href': href_func(i),
-        })
-    previous = {
-        'symbol': '&laquo;',
-        'class': 'disabled' if pag_page == 1 else '',
-        'href': href_func(pag_page - 1),
-    }
-    next_ = {
-        'symbol': '&raquo;',
-        'class': 'disabled' if pag_page == n_pages else '',
-        'href': href_func(pag_page + 1),
-    }
-    kw['pagination'] = [previous] + pagination + [next_]
-    return verses
+def _paginate(pag_page, num_verses, search_value):
+    if num_verses > SEARCH_LIMIT:
+        num_pages = int(math.ceil(num_verses / SEARCH_LIMIT))
+        pagination = []
+        href_func = lambda pg: "/search?{}".format(urllib.parse.urlencode({'text': search_value, 'page': pg}))
+        for i in range(1, num_pages + 1):
+            pagination.append({
+                'symbol': i,
+                'class': 'active' if i == pag_page else '',
+                'href': href_func(i),
+            })
+        previous = {
+            'symbol': '&laquo;',
+            'class': 'disabled' if pag_page == 1 else '',
+            'href': href_func(pag_page - 1),
+        }
+        next_ = {
+            'symbol': '&raquo;',
+            'class': 'disabled' if pag_page == num_pages else '',
+            'href': href_func(pag_page + 1),
+        }
+        return [previous] + pagination + [next_]
 
 
 if __name__ == '__main__':

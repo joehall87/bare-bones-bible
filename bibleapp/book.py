@@ -29,17 +29,19 @@ class Tanakh():
 			raise UnknownBookError('I can\'t find a book matching <strong>"{}"</strong>.<br>Please try again.'.format(alias))
 		return books[0]
 
-	def search(self, search_str, book_filter=None, lang=None):
+	def search(self, search_str, start=None, end=None, book_filter=None, lang=None):
 		"""Find a word or phrase."""
-		occurrences, verses = 0, []
 		search_obj = _make_search_obj(search_str)
+		num_occurrences, num_verses, verses = 0, 0, []
 		for book in self._iter_books(book_filter):
 			for verse in book.iter_verses():
 				num = verse.search(search_obj, lang=lang)
 				if num:
-					occurrences += num
-					verses.append(verse)
-		return occurrences, verses
+					if start <= num_verses < end:
+						verses.append(verse)
+					num_occurrences += num
+					num_verses += 1
+		return num_occurrences, num_verses, verses
 
 	def get_passage(self, passage_str):
 		"""Return the matching (book, cv_start, cv_end) tuple."""
