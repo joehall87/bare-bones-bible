@@ -6,8 +6,9 @@ import urllib.parse
 
 from bibleapp.hebrew import Hebrew
 
+
 _HEBREW = Hebrew()
-_BIBLE_HUB_LINK = '<a href="https://biblehub.com/hebrew/{id}.htm">H{id}</a>'
+_STRONGS_URL = 'https://www.blueletterbible.org/lang/lexicon/lexicon.cfm?strongs={id}'
 _RESOURCES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'resources')
 
 
@@ -74,9 +75,9 @@ class Lexicon(object):
 
 	def _strongs_str(self, sid):
 		entry = self.strongs[sid]
-		url = _BIBLE_HUB_LINK.format(id=entry['id'].strip('H'))
-		return "<p>[{url}] <strong>{word} {pron}</strong> - {desc}</p>".format(
-			word=entry['w'], pron=entry['pron'], desc=entry['desc'], url=url)
+		url = _STRONGS_URL.format(id=entry['id'])
+		return '<p>[<a href="{url}" target="_blank">{id}</a>] <strong>{word} {pron}</strong> - {desc}</p>'.format(
+			id=entry['id'], word=entry['w'], pron=entry['pron'], desc=entry['desc'], url=url)
 
 	@staticmethod
 	def _make_ref_link(ref):

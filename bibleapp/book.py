@@ -7,6 +7,7 @@ import re
 from .hebrew import Hebrew
 
 
+_VERSE_URL = "https://www.blueletterbible.org/kjv/{b}/{c}/{v}/t_conc_{c_abs}{v_zfill}"
 _RESOURCES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'resources')
 
 
@@ -20,7 +21,7 @@ class Tanakh():
 	@property
 	def books(self):
 		"""Make books lazy to free-up mem."""
-		return [Book(x[0], x[1], bhub=x[2] if len(x) > 2 else None) for x in _BOOKS]
+		return [Book(x[0], x[1], x[2], code=x[3] if len(x) > 3 else None) for x in _BOOKS]
 
 	def get_book(self, alias):
 		"""Get a specific book."""
@@ -118,24 +119,23 @@ class Tanakh():
 class Book(object):
 	"""Wrapper around the Hebrew text for a book."""
 
-	def __init__(self, collection, name, bhub=None):
+	def __init__(self, collection, name, ch_offset, code=None):
 		self.collection = collection
 		self.name = name
-		self.bhub = bhub or name.replace(' ', '_').lower()
+		self.code = code or name.replace(' ', '')[:3]
 		self.he_name = None
 		name = name.replace(' ', '').lower()
 		if name[0].isdigit():
 			num = name[0]
 			name = name[1:]
-			self.ref = num + name.title()[:3]
 			self._aliases = set([num + name, name + num])
 			self._aliases |= set(num + name[:i] for i in range(2, 6))
 			self._aliases |= set(name[:i] + num for i in range(2, 6))
 		else:
-			self.ref = self.name[:3]
 			self._aliases = set([name])
 			self._aliases |= set(name[:i].lower() for i in range(2, 6))
 		self._content = None
+		self.ch_offset = ch_offset
 
 	@property
 	def content(self):
@@ -195,13 +195,14 @@ class Verse(object):
 		if verse_only:
 			return '{}{}'.format(self.v, suffix)
 		else:
-			return '{} {}:{}{}'.format(self.book.ref, self.c, self.v, suffix)
+			return '{} {}:{}{}'.format(self.book.code, self.c, self.v, suffix)
 
 	@property
-	def bible_hub_url(self):
+	def url(self):
 		"""The bible-hub url."""
 		c, v = _VERSIFICATION[self.book.name]['en-map'].get((self.c, self.v), (self.c, self.v))
-		return "https://biblehub.com/lexicon/{b}/{c}-{v}.htm".format(b=self.book.bhub, c=c, v=v)
+		return _VERSE_URL.format(b=self.book.code.lower(), c=c, v=v, 
+			c_abs=self.book.ch_offset + c, v_zfill=str(v).zfill(3))
 
 	def search(self, search_obj, lang='en'):
 		"""Search for an english or transliterated word/phrase."""
@@ -262,43 +263,43 @@ class UnknownBookError(Exception):
 
 
 _BOOKS = [
-	('Torah', 'Genesis'),
-	('Torah', 'Exodus'),
-	('Torah', 'Leviticus'),
-	('Torah', 'Numbers'),
-	('Torah', 'Deuteronomy'),
-	('Neviim', 'Joshua'),
-	('Neviim', 'Judges'),
-	('Neviim', '1 Samuel'),
-	('Neviim', '2 Samuel'),
-	('Neviim', '1 Kings'),
-	('Neviim', '2 Kings'),
-	('Neviim', 'Isaiah'),
-	('Neviim', 'Jeremiah'),
-	('Neviim', 'Ezekiel'),
-	('Neviim', 'Hosea'),
-	('Neviim', 'Joel'),
-	('Neviim', 'Amos'),
-	('Neviim', 'Obadiah'),
-	('Neviim', 'Jonah'),
-	('Neviim', 'Micah'),
-	('Neviim', 'Nahum'),
-	('Neviim', 'Habakkuk'),
-	('Neviim', 'Zephaniah'),
-	('Neviim', 'Haggai'),
-	('Neviim', 'Zechariah'),
-	('Neviim', 'Malachi'),
-	('Ketuvim', 'Psalms'),
-	('Ketuvim', 'Proverbs'),
-	('Ketuvim', 'Job'),
-	('Ketuvim', 'Song of Songs', 'songs'),
-	('Ketuvim', 'Ruth'),
-	('Ketuvim', 'Lamentations'),
-	('Ketuvim', 'Ecclesiastes'),
-	('Ketuvim', 'Esther'),
-	('Ketuvim', 'Daniel'),
-	('Ketuvim', 'Ezra'),
-	('Ketuvim', 'Nehemiah'),
-	('Ketuvim', '1 Chronicles'),
-	('Ketuvim', '2 Chronicles'),
+	('Torah', 'Genesis', 0),
+	('Torah', 'Exodus', 50),
+	('Torah', 'Leviticus', 90),
+	('Torah', 'Numbers', 117),
+	('Torah', 'Deuteronomy', 153),
+	('Neviim', 'Joshua', 187),
+	('Neviim', 'Judges', 211, 'Jdg'),
+	('Neviim', '1 Samuel', 236),
+	('Neviim', '2 Samuel', 267),
+	('Neviim', '1 Kings', 291),
+	('Neviim', '2 Kings', 313),
+	('Neviim', 'Isaiah', 679),
+	('Neviim', 'Jeremiah', 745),
+	('Neviim', 'Ezekiel', 802),
+	('Neviim', 'Hosea', 862),
+	('Neviim', 'Joel', 876),
+	('Neviim', 'Amos', 879),
+	('Neviim', 'Obadiah', 888),
+	('Neviim', 'Jonah', 889),
+	('Neviim', 'Micah', 893),
+	('Neviim', 'Nahum', 900),
+	('Neviim', 'Habakkuk', 903),
+	('Neviim', 'Zephaniah', 906),
+	('Neviim', 'Haggai', 909),
+	('Neviim', 'Zechariah', 911),
+	('Neviim', 'Malachi', 925),
+	('Ketuvim', 'Psalms', 478),
+	('Ketuvim', 'Proverbs', 628),
+	('Ketuvim', 'Job', 436),
+	('Ketuvim', 'Song of Songs', 671, 'Sng'),
+	('Ketuvim', 'Ruth', 232, 'Rth'),
+	('Ketuvim', 'Lamentations', 797),
+	('Ketuvim', 'Ecclesiastes', 659),
+	('Ketuvim', 'Esther', 426),
+	('Ketuvim', 'Daniel', 850),
+	('Ketuvim', 'Ezra', 403),
+	('Ketuvim', 'Nehemiah', 413),
+	('Ketuvim', '1 Chronicles', 338),
+	('Ketuvim', '2 Chronicles', 367),
 ]

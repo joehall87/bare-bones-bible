@@ -156,13 +156,9 @@
     <div class="row">
       <div class="col-lg-12" align="center">
         <h1 class="mt-5">
-          {% if chapter > 1 %}
-          <a class="btn btn-outline-primary float-left" href="book?name={{ book.name }}&chapter={{ chapter - 1 }}" role="button">&laquo;</a>
-          {% endif %}
+          <a class="btn btn-outline-primary float-left {% if chapter == 1 %}disabled{% endif %}" href="book?name={{ book.name }}&chapter={{ chapter - 1 }}" role="button">&laquo;</a>
           {{ book.name }} {{ chapter }}
-          {% if chapter < book.num_chapters %}
           <a class="btn btn-outline-primary float-right {% if chapter == book.num_chapters %}disabled{% endif %}" href="book?name={{ book.name }}&chapter={{ chapter + 1 }}" role="button">&raquo;</a>
-          {% endif %}
         </h1>
       </div>
     </div>
@@ -197,7 +193,7 @@
           <p>
             <bdo dir=rtl>
               <bdo dir=ltr>
-                <a href="{{ verse.bible_hub_url }}" target="_blank">{{ verse.ref(page == 'chapter') | safe }}</a>
+                <strong><a href="{{ verse.url }}" target="_blank">{{ verse.ref(page == 'chapter') | safe }}</a></strong>
               </bdo>
               &nbsp;
               <span class="hebrew">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span style="color: red">{% endif %}{{ token.word }}{% if token.highlight %}</span>{% endif %}</a>{{ token.word_space }}{% endfor %}</span>
