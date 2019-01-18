@@ -28,7 +28,7 @@ body {
 /* Hebrew highlighting */
 .hebrew {
   font-family: 'David Libre', serif;
-  font-size: 180%;
+  font-size: 160%;
 }
 .hebrew a {
   /* See https://fonts.google.com/?subset=hebrew for other options */
