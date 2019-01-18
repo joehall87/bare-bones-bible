@@ -251,7 +251,7 @@ def _make_search_obj(search_str, lang='en'):
 	en_re_expr = re.compile('({})'.format(search_str.replace('*', '\S*')), flags=re.IGNORECASE)
 	he_re_list = []
 	for term in re.split('[\s\-:]', search_str.lower()):
-		he_re_list.append(re.compile(term.replace('*', '.*')))
+		he_re_list.append(re.compile('^{}$'.format(term.replace('*', '.*'))))
 	return {
 		'en': en_re_expr,
 		'he': he_re_list,

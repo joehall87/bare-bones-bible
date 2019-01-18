@@ -214,6 +214,8 @@ class Hebrew(object):
         ('ay$', 'ai'),
         ('cha ', 'ach '),
         ('cha$', 'ach'),
+        ('cho ', 'och '),
+        ('cho$', 'och'),
         ('wo', 'o'),
     ]
     _MAP = {k: v for dct in [_CANTILLATIONS, _NIQQUD, _PUNCTUATION, _CHARS] for k, v in dct.items()}
