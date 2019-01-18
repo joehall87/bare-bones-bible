@@ -22,7 +22,7 @@ body {
 /* Fixed navbar */
 .scrollable-menu {
   height: auto;
-  max-height: 400px;
+  max-height: 300px;
   overflow-x: hidden;
 }
 /* Hebrew highlighting */

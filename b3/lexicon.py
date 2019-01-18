@@ -4,7 +4,7 @@ import os.path
 import re
 import urllib.parse
 
-from bibleapp.hebrew import Hebrew
+from .hebrew import Hebrew
 
 
 _HEBREW = Hebrew()

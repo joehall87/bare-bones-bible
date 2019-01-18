@@ -7,7 +7,7 @@ import urllib.parse
 
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from bibleapp.hebrew import Hebrew
+from b3.hebrew import Hebrew
 
 
 _SEFARIA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'resources', 'sefaria')

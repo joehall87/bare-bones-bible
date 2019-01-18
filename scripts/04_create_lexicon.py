@@ -9,8 +9,8 @@ import requests
 
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from bibleapp.book import Tanakh
-from bibleapp.hebrew import Hebrew
+from b3.book import Tanakh
+from b3.hebrew import Hebrew
 
 
 # Need to put HebrewStrong.xml and LexicalIndex.xml from https://github.com/openscriptures/HebrewLexicon into this dir:

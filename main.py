@@ -5,8 +5,8 @@ import urllib.parse
 
 from flask import Flask, render_template, redirect, request, url_for
 
-from bibleapp.book import Tanakh, UnknownBookError
-from bibleapp.lexicon import Lexicon
+from b3.book import Tanakh, UnknownBookError
+from b3.lexicon import Lexicon
 
 
 app = Flask(__name__)
