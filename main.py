@@ -148,7 +148,7 @@ def _create_modals(verses):
     for verse in verses:
         for token in verse.he_tokens:
             if token.word not in used:
-                desc = lexicon.description(token.word)
+                desc = token.strongs  #lexicon.description(token.word)
                 modals.append((token, desc))
                 used.add(token.word)
     return modals

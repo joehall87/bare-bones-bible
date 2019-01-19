@@ -4,7 +4,7 @@ env
 __pycache__
 
 # Resources
-models
+_cache
 
 # Notebooks
 *.ipynb

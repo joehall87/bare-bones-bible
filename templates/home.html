@@ -205,7 +205,7 @@
       </div>
       <!-- English -->
       <div class="col-lg-6">
-        <p>{{ verse.english | safe }}</p>
+        <p>{% for token in verse.en_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span style="color: red">{% endif %}{{ token.word }}{% if token.highlight %}</span>{% endif %}</a>{{ token.word_space }}{% endfor %}</p>
       </div>
     </div>
     {% endfor %}
