@@ -71,7 +71,7 @@ def _make_text(tree):
                     'x-pe': ' (\u05E4) ',
                     'x-reversednun': ' (\u05C6) ',  # <- Appears in some Psalms
                     'x-samekh': ' (\u05E1) ',
-                    'x-sof-pasuq': ' \u05C3 ',
+                    'x-sof-pasuq': '\u05C3 ',
                 }[elem.attrib['type']]
                 verse_tokens[-1][-2] += seg
                 verse_tokens[-1][-1] = HEB.transliterate(verse_tokens[-1][-2])
