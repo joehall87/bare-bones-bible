@@ -155,25 +155,30 @@ class Book(object):
 	def _init_content(self):
 		content = []
 		blobs = {}
-		for codex in ['webp', 'wlc']:
+		for codex in ['webp', 'wlc', 'lxx']:
 			path = os.path.join(_RESOURCES_DIR, codex, self.code + '.json')
 			with open(path, 'r') as f:
 				blobs[codex] = json.load(f)
-		for c, (en_chapter, he_chapter) in enumerate(zip(blobs['webp']['text'], blobs['wlc']['text']), start=1):
-			for v, (en_verse, he_verse) in enumerate(zip(en_chapter, he_chapter), start=1):
-				verse = Verse(self, c, v, [EnToken(*args) for args in en_verse], [HeToken(*args) for args in he_verse])
+		for c, (en_ch, he_ch, gr_ch) in enumerate(zip(blobs['webp']['text'], blobs['wlc']['text'], blobs['lxx']['text']), start=1):
+			for v, (en_verse, he_verse, gr_verse) in enumerate(zip(en_ch, he_ch, gr_ch), start=1):
+				verse = Verse(self, c, v, 
+					[EnToken(*args) for args in en_verse],
+					[HeToken(*args) for args in he_verse],
+					[GrToken(*args) for args in gr_verse],
+				)
 				content.append(verse)
 		return content
 
 
 class Verse(object):
 	"""Verse wrapper."""
-	def __init__(self, book, c, v, english_tokens, hebrew_tokens):
+	def __init__(self, book, c, v, english_tokens, hebrew_tokens, greek_tokens):
 		self.book = book
 		self.c = c
 		self.v = v
 		self.en_tokens = english_tokens
 		self.he_tokens = hebrew_tokens
+		self.gr_tokens = greek_tokens
 
 	def ref(self, verse_only=False):
 		"""Pretty reference."""
@@ -212,7 +217,6 @@ class Verse(object):
 				for j in range(n):
 					tokens[i + j].highlight = True
 		return num
-
 
 
 class EnToken(object):
@@ -254,6 +258,26 @@ class HeToken(object):
 	def word_to_search(self):
 		"""Word to search."""
 		return self.tlit
+
+
+class GrToken(object):
+	"""Token wrapper."""
+	def __init__(self, word, word_no_vowels, tlit):
+		self.word = word
+		self.word_no_vowels = word_no_vowels
+		self.tlit = tlit
+		self.strongs = ''
+		self.highlight = False
+
+	@property
+	def label(self):
+		"""Html label."""
+		return self.word_no_vowels
+
+	@property
+	def word_to_search(self):
+		"""Word to search."""
+		return self.word_no_vowels
 
 
 def _make_search_obj(search_str):

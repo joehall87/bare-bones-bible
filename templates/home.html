@@ -7,8 +7,53 @@
   <link rel="icon" type="image/png" href="static/bible-favicon1.png">
   <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="static/style.css">
-  <link href="https://fonts.googleapis.com/css?family=David+Libre|Montserrat:400,700" rel="stylesheet">
-  <style></style>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700|David+Libre|GFS+Neohellenic" rel="stylesheet">
+  <style>
+    .mini-table {
+      display:inline-table;
+      border-spacing: 0px 0px;
+    }
+    .mini-table td {
+      text-align: center;
+      padding: 0px;
+    }
+    .english a {
+      color: black;
+      text-decoration: none;  /* Avoid underline on hover */
+    }
+    .english a:hover {
+      text-shadow: 2px 2px 10px #007BFF;
+    }
+    .hebrew {
+      font-family: 'David Libre', serif;
+      font-size: 160%;
+    }
+    .hebrew a {
+      color: black;
+      text-decoration: none;  /* Avoid underline on hover */
+    }
+    .hebrew a:hover {
+      text-shadow: 2px 2px 10px #007BFF;
+    }
+    .greek {
+      font-family: 'GFS Neohellenic', serif;
+      font-size: 160%;
+    }
+    .greek a {
+      color: black;
+      text-decoration: none;  /* Avoid underline on hover */
+    }
+    .greek a:hover {
+      text-shadow: 2px 2px 10px #007BFF;
+    }
+    .translit {
+      font-size: 70%;
+      font-style: italic;
+    }
+    .foo {
+      background-color: #EEEEEE;
+    }
+  </style>
 </head>
 <body>
   <!-- ** Navbar ** -->
@@ -185,27 +230,61 @@
     <hr/>
     <!-- Chapter/Search Body -->
     {% for verse in verses %}
+    <div class="row mt-1 pt-3 foo">
+      <!-- English -->
+      <div class="col-lg-12">
+        <p>
+          <strong><a href="{{ verse.url }}" target="_blank">{{ verse.ref(page == 'chapter') | safe }}</a></strong>
+          <span class="english">
+            {% for token in verse.en_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span style="color: red">{% endif %}{{ token.word }}{% if token.highlight %}</span>{% endif %}</a>{{ token.word_space }}{% endfor %}
+          </span>
+        </p>
+      </div>
+    </div>
     <div class="row">
       <!-- Hebrew -->
-      <div class="col-lg-6">
-        <div class="text-right">
-          <p>
-            <bdo dir=rtl>
-              <bdo dir=ltr>
-                <strong><a href="{{ verse.url }}" target="_blank">{{ verse.ref(page == 'chapter') | safe }}</a></strong>
-              </bdo>
-              &nbsp;
-              <span class="hebrew">{% for token in verse.he_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span style="color: red">{% endif %}{{ token.word }}{% if token.highlight %}</span>{% endif %}</a>{{ token.word_space }}{% endfor %}</span>
-            </bdo>
-          </p>
-          <p>
-            <span class="translit">{% for token in verse.he_tokens %}<a {% if token.highlight %}class="highlight"{% endif %}href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span class="highlight">{% endif %}{{ token.tlit }}{% if token.highlight %}</span>{% endif %}</a>{{ token.tlit_space }}{% endfor %}</span>
-          </p>
-        </div>
+      <div class="col-lg-6 text-right" dir='rtl'>
+        {% for token in verse.he_tokens %}
+        <table class="mini-table">
+          <tr><td>
+            <span class="hebrew">
+              <a href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span style="color: red">{% endif %}{{ token.word }}{% if token.highlight %}</span>{% endif %}</a>
+            </span>
+          </td></tr>
+          <tr><td dir='ltr'>
+            <span class="translit">
+              <a {% if token.highlight %}class="highlight"{% endif %}href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span class="highlight">{% endif %}{{ token.tlit }}{% if token.highlight %}</span>{% endif %}</a>
+            </span>
+          </td></tr>
+        </table>
+        {% if token.word_space %}
+        <table class="mini-table">
+          <tr><td>
+            <span class="hebrew">{{ token.word_space }}</span>
+          </td></tr>
+          <tr><td dir='ltr'>
+            <span class="translit">{{ token.tlit_space }}</span>
+          </td></tr>
+        </table>
+        {% endif %}
+        {% endfor %}
       </div>
-      <!-- English -->
+      <!-- Greek -->
       <div class="col-lg-6">
-        <p>{% for token in verse.en_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span style="color: red">{% endif %}{{ token.word }}{% if token.highlight %}</span>{% endif %}</a>{{ token.word_space }}{% endfor %}</p>
+        {% for token in verse.gr_tokens %}
+        <table class="mini-table">
+          <tr><td style="text-align:center; padding: 0px">
+            <span class="greek">
+              <a href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span style="color: red">{% endif %}{{ token.word_no_vowels }}{% if token.highlight %}</span>{% endif %}</a>
+            </span>
+          </td></tr>
+          <tr><td style="text-align:center; padding: 0px">
+            <span class="translit">
+              <a {% if token.highlight %}class="highlight"{% endif %}href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span class="highlight">{% endif %}{{ token.tlit }}{% if token.highlight %}</span>{% endif %}</a>
+            </span>
+          </td></tr>
+        </table>
+        {% endfor %}
       </div>
     </div>
     {% endfor %}
@@ -213,12 +292,8 @@
     {% if page == 'chapter' %}
     <div class="row">
       <div class="col-lg-12 mt-3">
-        {% if chapter > 1 %}
-        <a class="btn btn-outline-primary float-left" href="book?name={{ book.name }}&chapter={{ chapter - 1 }}" role="button">&laquo;</a>
-        {% endif %}
-        {% if chapter < book.num_chapters %}
+        <a class="btn btn-outline-primary float-left {% if chapter == 1 %}disabled{% endif %}" href="book?name={{ book.name }}&chapter={{ chapter - 1 }}" role="button">&laquo;</a>
         <a class="btn btn-outline-primary float-right {% if chapter == book.num_chapters %}disabled{% endif %}" href="book?name={{ book.name }}&chapter={{ chapter + 1 }}" role="button">&raquo;</a>
-        {% endif %}
       </div>
     </div>
     <!-- Pagination -->

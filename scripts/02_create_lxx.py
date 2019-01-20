@@ -10,6 +10,9 @@ import unicodedata
 ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(ROOT_DIR)
 
+from b3.greek import Greek
+
+GREEK = Greek()
 MY_LXX_DIR = os.path.join(ROOT_DIR, 'resources', 'lxx')
 BHUB_URL = 'https://biblehub.com/sepd/{b}/{c}.htm'
 
@@ -21,6 +24,11 @@ BHUB_BOOK_IDS = [
     'Job', 'Songs', 'Ruth', 'Lamentations', 'Ecclesiastes', 'Esther', 'Daniel', 
     'Ezra', 'Nehemiah', '1_Chronicles', '2_Chronicles',
 ]
+MY_BOOK_IDS = [
+    'Gen', 'Exo', 'Lev', 'Num', 'Deu', 'Jos', 'Jdg', '1Sa', '2Sa', '1Ki', '2Ki', 
+    'Isa', 'Jer', 'Eze', 'Hos', 'Joe', 'Amo', 'Oba', 'Jon', 'Mic', 'Nah', 'Hab', 'Zep', 'Hag', 'Zec', 'Mal',
+    'Psa', 'Pro', 'Job', 'Sng', 'Rth', 'Lam', 'Ecc', 'Est', 'Dan', 'Ezr', 'Neh', '1Ch', '2Ch',
+]
 
 VERSE_RE = re.compile('<span [^>]+reftext[^>]+><a [^>]+><b>\d+</b></a></span>([^<]+)')
 
@@ -28,8 +36,9 @@ VERSE_RE = re.compile('<span [^>]+reftext[^>]+><a [^>]+><b>\d+</b></a></span>([^
 def run():
     """Scrape bible-hub to get LXX greek text with KJV versification."""
     _check_dirs()
+    id_map = dict(zip(BHUB_BOOK_IDS, MY_BOOK_IDS))
     for bhub_id in BHUB_BOOK_IDS:
-        path = os.path.join(MY_LXX_DIR, bhub_id.replace('_', '')[:3] + '.json')
+        path = os.path.join(MY_LXX_DIR, id_map[bhub_id] + '.json')
         text = _load_text(bhub_id)
         text = [[_clean_verse(v) for v in c] for c in text]
         with open(path, 'w') as f:
@@ -72,7 +81,9 @@ def _clean_verse(verse):
     verse = verse.replace('\xb7', '')                # Ignore the random center-dots
     verse = verse.replace('[', '').replace(']', '')  # Ignore the brackets for now
     verse = verse.replace('.', '').replace(',', '')  # ...and punctuation
-    return [(w, _strip_accents(w)) for w in verse.split()]
+    verse = verse.lower()
+    tokens = [(w, _strip_accents(w)) for w in verse.split()]
+    return [(w, ws, GREEK.transliterate(ws)) for w, ws in tokens]
 
 
 def _strip_accents(s):
