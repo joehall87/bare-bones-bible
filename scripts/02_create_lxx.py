@@ -14,7 +14,9 @@ from b3.greek import Greek
 
 GREEK = Greek()
 MY_LXX_DIR = os.path.join(ROOT_DIR, 'resources', 'lxx')
-BHUB_URL = 'https://biblehub.com/sepd/{b}/{c}.htm'
+
+# Assumes you have git cloned "GreekResources" repo in a dir called openscriptures
+WORD_LOOKUP_PATH = os.path.join(os.path.dirname(ROOT_DIR), 'openscriptures', 'GreekResources', 'GreekWordList.js')
 
 BHUB_BOOK_IDS = [
     'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', 'Joshua', 'Judges', 
@@ -30,17 +32,24 @@ MY_BOOK_IDS = [
     'Psa', 'Pro', 'Job', 'Sng', 'Rth', 'Lam', 'Ecc', 'Est', 'Dan', 'Ezr', 'Neh', '1Ch', '2Ch',
 ]
 
+BHUB_URL = 'https://biblehub.com/sepd/{b}/{c}.htm'
 VERSE_RE = re.compile('<span [^>]+reftext[^>]+><a [^>]+><b>\d+</b></a></span>([^<]+)')
 
 
 def run():
     """Scrape bible-hub to get LXX greek text with KJV versification."""
     _check_dirs()
+    _create_lxx()
+
+
+def _create_lxx():
+    _check_dirs()
     id_map = dict(zip(BHUB_BOOK_IDS, MY_BOOK_IDS))
+    word_lookup = _load_word_lookup()
     for bhub_id in BHUB_BOOK_IDS:
         path = os.path.join(MY_LXX_DIR, id_map[bhub_id] + '.json')
         text = _load_text(bhub_id)
-        text = [[_clean_verse(v) for v in c] for c in text]
+        text = [[_clean_verse(v, word_lookup) for v in c] for c in text]
         with open(path, 'w') as f:
             json.dump({'text': text}, f)
 
@@ -77,13 +86,25 @@ def _load_text(bhub_id):
         return text
 
 
-def _clean_verse(verse):
+def _clean_verse(verse, word_lookup):
     verse = verse.replace('\xb7', '')                # Ignore the random center-dots
     verse = verse.replace('[', '').replace(']', '')  # Ignore the brackets for now
     verse = verse.replace('.', '').replace(',', '')  # ...and punctuation
     verse = verse.lower()
-    tokens = [(w, _strip_accents(w)) for w in verse.split()]
-    return [(w, ws, GREEK.transliterate(ws)) for w, ws in tokens]
+    tokens = ((w, _strip_accents(w)) for w in verse.split())
+    tokens = ((w, ws, GREEK.transliterate(ws)) for w, ws in tokens)
+    tokens = ((w, ws, tlit, word_lookup.get(ws, {}).get('strong', '')) for w, ws, tlit in tokens)
+    return [(w, ws, tlit, ('G' if strong else '') + strong) for w, ws, tlit, strong in tokens]
+
+
+def _load_word_lookup():
+    json_str = ''
+    with open(WORD_LOOKUP_PATH, 'r') as f:
+        for line in f.readlines():
+            line = line.strip()
+            if line.startswith('"'):
+                json_str += line
+    return json.loads('{' + json_str + '}')
 
 
 def _strip_accents(s):

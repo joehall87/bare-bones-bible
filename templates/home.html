@@ -17,34 +17,13 @@
       text-align: center;
       padding: 0px;
     }
-    .english a {
-      color: black;
-      text-decoration: none;  /* Avoid underline on hover */
-    }
-    .english a:hover {
-      text-shadow: 2px 2px 10px #007BFF;
-    }
     .hebrew {
       font-family: 'David Libre', serif;
       font-size: 160%;
     }
-    .hebrew a {
-      color: black;
-      text-decoration: none;  /* Avoid underline on hover */
-    }
-    .hebrew a:hover {
-      text-shadow: 2px 2px 10px #007BFF;
-    }
     .greek {
       font-family: 'GFS Neohellenic', serif;
       font-size: 160%;
-    }
-    .greek a {
-      color: black;
-      text-decoration: none;  /* Avoid underline on hover */
-    }
-    .greek a:hover {
-      text-shadow: 2px 2px 10px #007BFF;
     }
     .translit {
       font-size: 70%;
@@ -52,6 +31,13 @@
     }
     .foo {
       background-color: #EEEEEE;
+    }
+    .pretty-link a {
+      color: black;
+      text-decoration: none;  /* Avoid underline on hover */
+    }
+    .pretty-link a:hover {
+      text-shadow: 2px 2px 10px #007BFF;
     }
   </style>
 </head>
@@ -235,25 +221,24 @@
       <div class="col-lg-12">
         <p>
           <strong><a href="{{ verse.url }}" target="_blank">{{ verse.ref(page == 'chapter') | safe }}</a></strong>
-          <span class="english">
-            {% for token in verse.en_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span style="color: red">{% endif %}{{ token.word }}{% if token.highlight %}</span>{% endif %}</a>{{ token.word_space }}{% endfor %}
+          <span class="english pretty-link">
+            {% for token in verse.en_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.strongs }}"><span {% if token.highlight %}class="highlight"{% endif %}>{{ token.word }}</span></a>{{ token.word_space }}{% endfor %}
           </span>
         </p>
       </div>
     </div>
     <div class="row">
       <!-- Hebrew -->
-      <div class="col-lg-6 text-right" dir='rtl'>
+      <div class="col-lg-6 text-right pretty-link" dir='rtl'>
         {% for token in verse.he_tokens %}
         <table class="mini-table">
           <tr><td>
             <span class="hebrew">
-              <a href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span style="color: red">{% endif %}{{ token.word }}{% if token.highlight %}</span>{% endif %}</a>
+              <a href="#" data-toggle="modal" data-target="#{{ token.strongs }}"><span {% if token.highlight %}class="highlight"{% endif %}>{{ token.word }}</span></a>
             </span>
-          </td></tr>
-          <tr><td dir='ltr'>
-            <span class="translit">
-              <a {% if token.highlight %}class="highlight"{% endif %}href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span class="highlight">{% endif %}{{ token.tlit }}{% if token.highlight %}</span>{% endif %}</a>
+            <br>
+            <span class="translit" dir='ltr'>
+              <a href="#" data-toggle="modal" data-target="#{{ token.strongs }}"><span {% if token.highlight %}class="highlight"{% endif %}>{{ token.tlit }}</span></a>
             </span>
           </td></tr>
         </table>
@@ -261,26 +246,24 @@
         <table class="mini-table">
           <tr><td>
             <span class="hebrew">{{ token.word_space }}</span>
-          </td></tr>
-          <tr><td dir='ltr'>
-            <span class="translit">{{ token.tlit_space }}</span>
+            <br>
+            <span class="translit" dir='ltr'>{{ token.tlit_space }}</span>
           </td></tr>
         </table>
         {% endif %}
         {% endfor %}
       </div>
       <!-- Greek -->
-      <div class="col-lg-6">
+      <div class="col-lg-6 pretty-link">
         {% for token in verse.gr_tokens %}
         <table class="mini-table">
-          <tr><td style="text-align:center; padding: 0px">
+          <tr><td>
             <span class="greek">
-              <a href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span style="color: red">{% endif %}{{ token.word_no_vowels }}{% if token.highlight %}</span>{% endif %}</a>
+              <a href="#" data-toggle="modal" data-target="#{{ token.strongs }}"><span {% if token.highlight %}class="highlight"{% endif %}>{{ token.word_no_vowels }}</span></a>
             </span>
-          </td></tr>
-          <tr><td style="text-align:center; padding: 0px">
+            <br>
             <span class="translit">
-              <a {% if token.highlight %}class="highlight"{% endif %}href="#" data-toggle="modal" data-target="#{{ token.label }}">{% if token.highlight %}<span class="highlight">{% endif %}{{ token.tlit }}{% if token.highlight %}</span>{% endif %}</a>
+              <a href="#" data-toggle="modal" data-target="#{{ token.strongs }}"><span {% if token.highlight %}class="highlight"{% endif %}>{{ token.tlit }}</span></a>
             </span>
           </td></tr>
         </table>
@@ -310,19 +293,19 @@
     {% endif %}
     <div class="row"><div class="col-lg-12 mt-1">&nbsp;</div></div>
     <!-- Modals -->
-    {% for token, desc in modals %}
-    <div class="modal fade" id="{{ token.label }}" tabindex="-1" role="dialog" aria-labelledby="{{ token.label }}-label" aria-hidden="true">
+    {% for entry in modals %}
+    <div class="modal fade" id="{{ entry['id'] }}" tabindex="-1" role="dialog" aria-labelledby="{{ entry['id'] }}-label" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="{{ token.label }}-label">
-              <span class="hebrew">{{ token.word }}</span> &ndash; <a href="/search?text={{ token.tlit }}+lang%3Aheb">{{ token.tlit }}</a>
+            <h5 class="modal-title" id="{{ entry['id'] }}-label">
+              <span class="{% if entry['id'][0] == 'H' %}hebrew{% else %}greek{% endif %}">{{ entry['lemma'] }}</span> &ndash; <a href="/search?text={{ entry['tlit'] }}">{{ entry['tlit'] }}</a>
             </h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
-          <div class="modal-body">{{ desc | safe }}</div>
+          <div class="modal-body">{{ entry['desc'] | safe }}</div>
         </div>
       </div>
     </div>

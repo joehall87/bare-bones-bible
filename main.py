@@ -89,20 +89,22 @@ def _search(search_str, pag_page):
             title = _pretty_passage(book, start, end)
             return render_template('home.html', page='search-result', title=title, **kw)
 
-    # 2. English or tlit phrase
     occurrences, verses = 0, []
     book_filter = options.get('book', options.get('books'))
-    lang = {
-        'he': 'he', 
-        'heb': 'he', 
-        'hebrew': 'he',
-        'en': 'en',
-        'eng': 'en',
-        'english': 'en',
-    }.get(options.get('lang', options.get('lan')))
     start = (pag_page - 1) * SEARCH_LIMIT
     end = pag_page * SEARCH_LIMIT
-    num_occurrences, num_verses, verses = tanakh.search(search_str, start=start, end=end, book_filter=book_filter, lang=lang)
+    lang = options.get('lang', options.get('lan', ''))[:2]
+
+    # 2. Strongs reference
+    if re.match('[HG]\d+', search_str):
+        num_occurrences, num_verses, verses = tanakh.search_strongs(
+            search_str, start=start, end=end, book_filter=book_filter)
+
+    # 3. English or tlit phrase
+    else:
+        num_occurrences, num_verses, verses = tanakh.search(
+            search_str, start=start, end=end, book_filter=book_filter, lang=lang)
+        
     title = '{} <span style="font-size: 75%">occurrences of <span class="highlight">{}</span></span>'.format(
         num_occurrences, search_str)
     modals = _create_modals(verses)
@@ -146,11 +148,13 @@ def _create_modals(verses):
     lexicon = Lexicon()
     modals, used = [], set()
     for verse in verses:
-        for token in verse.he_tokens:
-            if token.word not in used:
-                desc = token.strongs  #lexicon.description(token.word)
-                modals.append((token, desc))
-                used.add(token.word)
+        for token in verse.he_tokens + verse.gr_tokens:
+            strongs = token.strongs
+            if strongs and strongs not in used:
+                used.add(strongs)
+                entry = lexicon.get(strongs)
+                if entry:
+                    modals.append(entry)
     return modals
 
 

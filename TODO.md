@@ -1,6 +1,5 @@
 # TODO
 Here are the improvements I would like to make before advertising:
-- Link all strongs to words for popups
 - Fix searching (including english searches)
 - Make strongs numbers searchable
 - Scrape New Testament

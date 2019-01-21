@@ -23,6 +23,19 @@ class Tanakh():
 			raise UnknownBookError('I can\'t find a book matching <strong>"{}"</strong>.<br>Please try again.'.format(alias))
 		return books[0]
 
+	def search_strongs(self, id_, start=None, end=None, book_filter=None):
+		"""Find occurrences by strongs reference."""
+		num_occurrences, num_verses, verses = 0, 0, []
+		for book in self._iter_books(book_filter):
+			for verse in book.iter_verses():
+				num = verse.search_strongs(id_)
+				if num:
+					if start <= num_verses < end:
+						verses.append(verse)
+					num_occurrences += num
+					num_verses += 1
+		return num_occurrences, num_verses, verses
+
 	def search(self, search_str, start=None, end=None, book_filter=None, lang=None):
 		"""Find a word or phrase."""
 		search_obj = _make_search_obj(search_str)
@@ -129,6 +142,12 @@ class Book(object):
 		else:
 			self._aliases = set([name])
 			self._aliases |= set(name[:i].lower() for i in range(2, 6))
+		# Prevent conflicts
+		if name == 'Judges':
+			self._aliases.pop('ju')  # Jude
+			self._aliases.pop('jud')
+		elif name in {'Job', 'Joel'}:
+			self._aliases.pop('jo')  # John
 		self._content = None
 
 	@property
@@ -193,6 +212,19 @@ class Verse(object):
 		return _VERSE_URL.format(b=self.book.code.lower(), c=self.c, v=self.v, 
 			c_abs=self.book.ch_offset + self.c, v_zfill=str(self.v).zfill(3))
 
+	def search_strongs(self, id_):
+		"""Search a strongs reference."""
+		num = 0
+		tokens = self.he_tokens if id_.startswith('H') else self.gr_tokens
+		for token in tokens:
+			if token.strongs == id_:
+				token.highlight = True
+				num += 1
+		for token in self.en_tokens:
+			if token.strongs == id_:
+				token.highlight = True
+		return num
+
 	def search(self, search_obj, lang='en'):
 		"""Search for an english or transliterated word/phrase."""
 		num = 0
@@ -201,7 +233,9 @@ class Verse(object):
 		if not lang or lang == 'en':
 			num += self._search_tokens(search_obj, self.en_tokens)
 		if not lang or lang == 'he':
-			num += self._search_tokens(self.he_tokens)
+			num += self._search_tokens(search_obj, self.he_tokens)
+		if not lang or lang == 'gr':
+			num += self._search_tokens(search_obj, self.gr_tokens)
 		return num
 
 	def _search_tokens(self, search_obj, tokens):
@@ -225,18 +259,9 @@ class EnToken(object):
 		self.word = word
 		self.word_space = word_space
 		self.strongs = strongs
-
-	@property
-	def label(self):
-		"""Html label."""
-		return self.strongs
-
-	@property
-	def word_to_search(self):
-		"""Word to search."""
-		return self.word
+		self.word_to_search = word
+		self.highlight = False
 	
-
 
 class HeToken(object):
 	"""Token wrapper."""
@@ -247,37 +272,19 @@ class HeToken(object):
 		self.strongs = strongs
 		self.word_space = word_space
 		self.tlit_space = tlit_space
+		self.word_to_search = tlit
 		self.highlight = False
-
-	@property
-	def label(self):
-		"""Html label."""
-		return self.strongs
-
-	@property
-	def word_to_search(self):
-		"""Word to search."""
-		return self.tlit
 
 
 class GrToken(object):
 	"""Token wrapper."""
-	def __init__(self, word, word_no_vowels, tlit):
+	def __init__(self, word, word_no_vowels, tlit, strongs):
 		self.word = word
 		self.word_no_vowels = word_no_vowels
 		self.tlit = tlit
-		self.strongs = ''
+		self.strongs = strongs
+		self.word_to_search = tlit
 		self.highlight = False
-
-	@property
-	def label(self):
-		"""Html label."""
-		return self.word_no_vowels
-
-	@property
-	def word_to_search(self):
-		"""Word to search."""
-		return self.word_no_vowels
 
 
 def _make_search_obj(search_str):
