@@ -71,6 +71,8 @@ def run():
     for elem in tree.findall('osisText/div/*'):
         book, chapter, verse_tokens, bcv, prev_bcv = parse_osis_elem(
             elem, book, chapter, verse_tokens, bcv, prev_bcv)
+    print('Writing {}'.format(prev_bcv[0]))
+    _write_book(prev_bcv[0], book)
 
 
 def _parse_xml():
@@ -120,7 +122,6 @@ def parse_osis_elem(elem, book, chapter, verse_tokens, bcv, prev_bcv):
 
 
 def _ref_to_bcv(ref):
-    print(ref)
     b, c, v = ref.split('.')
     return b, int(c), int(v)
 
@@ -128,6 +129,7 @@ def _ref_to_bcv(ref):
 def _parse_w_elem(elem):
     w = elem.text
     if w:
+        w = w.lower()
         ws = _strip_accents(w)
         tlit = GREEK.transliterate(ws)
         strong = LOOKUP.get(ws, {}).get('strong', '')

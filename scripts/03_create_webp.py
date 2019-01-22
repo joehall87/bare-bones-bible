@@ -44,6 +44,8 @@ def run():
     for elem in ot.findall('div/div/*') + nt.findall('div/div/*'):
         book, chapter, verse_tokens, title, bcv, prev_bcv = _parse_elem(
             elem, book, chapter, verse_tokens, title, bcv, prev_bcv)
+    print('Writing {}'.format(prev_bcv[0]))
+    _write_book(prev_bcv[0], book)
 
 
 def _parse_elem(elem, book, chapter, verse_tokens, title, bcv, prev_bcv):
@@ -89,6 +91,7 @@ def _parse_xml():
         xmlstring = re.sub('</?item>', '', xmlstring)
         xmlstring = re.sub('</?lg?[^>]*>', '', xmlstring)
         xmlstring = re.sub('</?p[^>]*>', '', xmlstring)
+        xmlstring = re.sub('</?q[^>]*>', '', xmlstring)
     return ET.fromstring(xmlstring)
 
 

@@ -58,7 +58,7 @@ def _parse_entry(id_, entry, lan):
         blb=_BLB_URL.format(id=id_),
         bhub=_BHUB_URL.format(id=id_[1:], lan=lan),
     )
-    return {'id': id_, 'lemma': lemma, 'tlit': tlit, 'desc': desc}
+    return {'id': id_, 'lemma': lemma, 'tlit': tlit, 'desc': desc.replace('H0', 'H')}
 
 
 def _load(lan):

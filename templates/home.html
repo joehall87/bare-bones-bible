@@ -222,23 +222,38 @@
         <p>
           <strong><a href="{{ verse.url }}" target="_blank">{{ verse.ref(page == 'chapter') | safe }}</a></strong>
           <span class="english pretty-link">
-            {% for token in verse.en_tokens %}<a href="#" data-toggle="modal" data-target="#{{ token.strongs }}"><span {% if token.highlight %}class="highlight"{% endif %}>{{ token.word }}</span></a>{{ token.word_space }}{% endfor %}
+            {% for token in verse.en_tokens %}
+            {% if token.strongs %}
+            <a href="#" data-toggle="modal" data-target="#{{ token.strongs }}"><span {% if token.highlight %}class="highlight"{% endif %}>{{ token.word }}</span></a><span style="color:grey">{{ token.word_space }}</span>
+            {% else %}
+            <span {% if token.highlight %}class="highlight"{% else %}style="color:grey"{% endif %}>{{ token.word }}</span><span style="color:grey">{{ token.word_space }}</span>
+            {% endif %}
+            {% endfor %}
           </span>
         </p>
       </div>
     </div>
     <div class="row">
       <!-- Hebrew -->
+      {% if verse.he_tokens %}
       <div class="col-lg-6 text-right pretty-link" dir='rtl'>
         {% for token in verse.he_tokens %}
         <table class="mini-table">
           <tr><td>
             <span class="hebrew">
+              {% if token.strongs %}
               <a href="#" data-toggle="modal" data-target="#{{ token.strongs }}"><span {% if token.highlight %}class="highlight"{% endif %}>{{ token.word }}</span></a>
+              {% else %}
+              <span {% if token.highlight %}class="highlight"{% else %}style="color:grey"{% endif %}>{{ token.word }}</span>
+              {% endif %}
             </span>
             <br>
             <span class="translit" dir='ltr'>
+              {% if token.strongs %}
               <a href="#" data-toggle="modal" data-target="#{{ token.strongs }}"><span {% if token.highlight %}class="highlight"{% endif %}>{{ token.tlit }}</span></a>
+              {% else %}
+              <span {% if token.highlight %}class="highlight"{% else %}style="color:grey"{% endif %}>{{ token.tlit }}</span>
+              {% endif %}
             </span>
           </td></tr>
         </table>
@@ -253,17 +268,26 @@
         {% endif %}
         {% endfor %}
       </div>
+      {% endif %}
       <!-- Greek -->
-      <div class="col-lg-6 pretty-link">
+      <div class="{% if verse.he_tokens %}col-lg-6{% else %}col-lg-12{% endif %} pretty-link">
         {% for token in verse.gr_tokens %}
         <table class="mini-table">
           <tr><td>
             <span class="greek">
+              {% if token.strongs %}
               <a href="#" data-toggle="modal" data-target="#{{ token.strongs }}"><span {% if token.highlight %}class="highlight"{% endif %}>{{ token.word_no_vowels }}</span></a>
+              {% else %}
+              <span {% if token.highlight %}class="highlight"{% else %}style="color:grey"{% endif %}>{{ token.word_no_vowels }}</span>
+              {% endif %}
             </span>
             <br>
-            <span class="translit">
+            <span class="translit" dir='ltr'>
+              {% if token.strongs %}
               <a href="#" data-toggle="modal" data-target="#{{ token.strongs }}"><span {% if token.highlight %}class="highlight"{% endif %}>{{ token.tlit }}</span></a>
+              {% else %}
+              <span {% if token.highlight %}class="highlight"{% else %}style="color:grey"{% endif %}>{{ token.tlit }}</span>
+              {% endif %}
             </span>
           </td></tr>
         </table>

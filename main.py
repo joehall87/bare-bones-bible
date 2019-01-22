@@ -5,7 +5,7 @@ import urllib.parse
 
 from flask import Flask, render_template, redirect, request, url_for
 
-from b3.book import Tanakh, UnknownBookError
+from b3.book import Bible, UnknownBookError
 from b3.lexicon import Lexicon
 
 
@@ -56,8 +56,8 @@ def page_not_found(e):
 
 
 def _make_chapter(name, chapter):
-    tanakh = Tanakh()
-    book = tanakh.get_book(name)
+    bible = Bible()
+    book = bible.get_book(name)
     title = '{} {}'.format(book.name, chapter)
     verses = list(book.iter_verses((chapter, None), (chapter, None)))
     modals = _create_modals(verses)
@@ -65,21 +65,21 @@ def _make_chapter(name, chapter):
 
 
 def _make_chapter_select(name):
-    tanakh = Tanakh()
-    book = tanakh.get_book(name)
+    bible = Bible()
+    book = bible.get_book(name)
     return render_template('home.html', page='chapter-select', book=book)
 
 
 def _search(search_str, pag_page):
-    tanakh = Tanakh()
+    bible = Bible()
     kw = {'search_value': search_str}
     search_str, options = _extract_options(search_str)
 
     # 1. Passage
-    passage = tanakh.get_passage(search_str)
+    passage = bible.get_passage(search_str)
     if passage:
         name, start, end = passage
-        book = tanakh.get_book(name)
+        book = bible.get_book(name)
         verses = list(book.iter_verses(start, end))
         modals = _create_modals(verses)
         kw.update({'verses': verses, 'modals': modals})
@@ -97,12 +97,12 @@ def _search(search_str, pag_page):
 
     # 2. Strongs reference
     if re.match('[HG]\d+', search_str):
-        num_occurrences, num_verses, verses = tanakh.search_strongs(
+        num_occurrences, num_verses, verses = bible.search_strongs(
             search_str, start=start, end=end, book_filter=book_filter)
 
     # 3. English or tlit phrase
     else:
-        num_occurrences, num_verses, verses = tanakh.search(
+        num_occurrences, num_verses, verses = bible.search(
             search_str, start=start, end=end, book_filter=book_filter, lang=lang)
         
     title = '{} <span style="font-size: 75%">occurrences of <span class="highlight">{}</span></span>'.format(
@@ -110,7 +110,7 @@ def _search(search_str, pag_page):
     modals = _create_modals(verses)
     pagination = _paginate(pag_page, num_verses, kw['search_value'])
     return render_template('home.html', page='search-result', title=title, verses=verses, modals=modals, 
-        book_filter=tanakh.pretty_book_filter(book_filter), pagination=pagination, **kw)
+        book_filter=bible.pretty_book_filter(book_filter), pagination=pagination, **kw)
 
 
 def _extract_options(search_str):
@@ -148,7 +148,7 @@ def _create_modals(verses):
     lexicon = Lexicon()
     modals, used = [], set()
     for verse in verses:
-        for token in verse.he_tokens + verse.gr_tokens:
+        for token in verse.en_tokens + verse.gr_tokens + (verse.he_tokens or []):
             strongs = token.strongs
             if strongs and strongs not in used:
                 used.add(strongs)

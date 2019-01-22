@@ -9,8 +9,8 @@ _VERSE_URL = "https://www.blueletterbible.org/kjv/{b}/{c}/{v}/t_conc_{c_abs}{v_z
 _RESOURCES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'resources')
 
 
-class Tanakh():
-	"""Wrapper around all books in Tanakh."""
+class Bible():
+	"""Wrapper around all books in the Bible."""
 	@property
 	def books(self):
 		"""Make books lazy to free-up mem."""
@@ -53,36 +53,49 @@ class Tanakh():
 	def get_passage(self, passage_str):
 		"""Return the matching (book, cv_start, cv_end) tuple."""
 		name = None
+		# Case 0: "book"
+		try:
+			book = self.get_book(passage_str)
+			name = book.name
+			start = 1, None
+			end = 1, None
+		except UnknownBookError:
+			pass
 		# Case 1: "book c1:v1 - c2:v2"
-		match = re.match('^([\w\s]+)\s+(\d+)\:(\d+)\s*-\s*(\d+):(\d+)$', passage_str)
-		if match:
-			name  = match.group(1)
-			start = int(match.group(2)), int(match.group(3))
-			end   = int(match.group(4)), int(match.group(5))
+		if not name:
+			match = re.match('^([\w\s]+)\s+(\d+)\:(\d+)\s*-\s*(\d+):(\d+)$', passage_str)
+			if match:
+				name  = match.group(1)
+				start = int(match.group(2)), int(match.group(3))
+				end   = int(match.group(4)), int(match.group(5))
 		# Case 2: "book c1:v1 - v2"
-		match = re.match('^([\w\s]+)\s+(\d+)\:(\d+)\s*-\s*(\d+)$', passage_str)
-		if match:
-			name  = match.group(1)
-			start = int(match.group(2)), int(match.group(3))
-			end   = int(match.group(2)), int(match.group(4))
+		if not name:
+			match = re.match('^([\w\s]+)\s+(\d+)\:(\d+)\s*-\s*(\d+)$', passage_str)
+			if match:
+				name  = match.group(1)
+				start = int(match.group(2)), int(match.group(3))
+				end   = int(match.group(2)), int(match.group(4))
 		# Case 3: "book c1:v1"
-		match = re.match('^([\w\s]+)\s+(\d+)\:(\d+)$', passage_str)
-		if match:
-			name  = match.group(1)
-			start = int(match.group(2)), int(match.group(3))
-			end   = start
+		if not name:
+			match = re.match('^([\w\s]+)\s+(\d+)\:(\d+)$', passage_str)
+			if match:
+				name  = match.group(1)
+				start = int(match.group(2)), int(match.group(3))
+				end   = start
 		# Case 4: "book c1"
-		match = re.match('^([\w\s]+)\s+(\d+)$', passage_str)						  
-		if match:
-			name  = match.group(1)
-			start = int(match.group(2)), None
-			end   = int(match.group(2)), None
+		if not name:
+			match = re.match('^([\w\s]+)\s+(\d+)$', passage_str)						  
+			if match:
+				name  = match.group(1)
+				start = int(match.group(2)), None
+				end   = int(match.group(2)), None
 		# Case 5: "book c1 - c2"
-		match = re.match('^([\w\s]+)\s+(\d+)\s*-\s*(\d+)$', passage_str)
-		if match:
-			name  = match.group(1)
-			start = int(match.group(2)), None
-			end   = int(match.group(3)), None
+		if not name:
+			match = re.match('^([\w\s]+)\s+(\d+)\s*-\s*(\d+)$', passage_str)
+			if match:
+				name  = match.group(1)
+				start = int(match.group(2)), None
+				end   = int(match.group(3)), None
 		if name:
 			return name, start, end
 
@@ -131,7 +144,7 @@ class Book(object):
 		self.num_chapters = num_chapters
 		self.ch_offset = ch_offset
 		self.code = code or name.replace(' ', '')[:3]
-		self.he_name = None
+		self.is_nt = collection not in {'Torah', 'Neviim', 'Ketuvim'}
 		name = name.replace(' ', '').lower()
 		if name[0].isdigit():
 			num = name[0]
@@ -173,31 +186,32 @@ class Book(object):
 	
 	def _init_content(self):
 		content = []
-		blobs = {}
-		for codex in ['webp', 'wlc', 'lxx']:
-			path = os.path.join(_RESOURCES_DIR, codex, self.code + '.json')
-			with open(path, 'r') as f:
-				blobs[codex] = json.load(f)
-		for c, (en_ch, he_ch, gr_ch) in enumerate(zip(blobs['webp']['text'], blobs['wlc']['text'], blobs['lxx']['text']), start=1):
-			for v, (en_verse, he_verse, gr_verse) in enumerate(zip(en_ch, he_ch, gr_ch), start=1):
-				verse = Verse(self, c, v, 
-					[EnToken(*args) for args in en_verse],
-					[HeToken(*args) for args in he_verse],
-					[GrToken(*args) for args in gr_verse],
-				)
+		codexes = [self._load_codex(x)['text'] for x in (['webp', 'gnt'] if self.is_nt else ['webp', 'lxx', 'wlc'])]
+		for c, chapters in enumerate(zip(*codexes), start=1):
+			for v, verses in enumerate(zip(*chapters), start=1):
+				if self.is_nt:
+					args = [EnToken(*x) for x in verses[0]], [GrToken(*x) for x in verses[1]]
+				else:
+					args = [EnToken(*x) for x in verses[0]], [GrToken(*x) for x in verses[1]], [HeToken(*x) for x in verses[2]]
+				verse = Verse(self, c, v, *args)
 				content.append(verse)
 		return content
+
+	def _load_codex(self, codex):
+		path = os.path.join(_RESOURCES_DIR, codex, self.code + '.json')
+		with open(path, 'r') as f:
+			return json.load(f)
 
 
 class Verse(object):
 	"""Verse wrapper."""
-	def __init__(self, book, c, v, english_tokens, hebrew_tokens, greek_tokens):
+	def __init__(self, book, c, v, english_tokens, greek_tokens, hebrew_tokens=None):
 		self.book = book
 		self.c = c
 		self.v = v
 		self.en_tokens = english_tokens
-		self.he_tokens = hebrew_tokens
 		self.gr_tokens = greek_tokens
+		self.he_tokens = hebrew_tokens
 
 	def ref(self, verse_only=False):
 		"""Pretty reference."""
@@ -215,6 +229,8 @@ class Verse(object):
 	def search_strongs(self, id_):
 		"""Search a strongs reference."""
 		num = 0
+		if id_.startswith('H') and self.he_tokens is None:
+			return num
 		tokens = self.he_tokens if id_.startswith('H') else self.gr_tokens
 		for token in tokens:
 			if token.strongs == id_:
@@ -232,10 +248,10 @@ class Verse(object):
 			search_obj = _make_search_obj(search_obj)
 		if not lang or lang == 'en':
 			num += self._search_tokens(search_obj, self.en_tokens)
-		if not lang or lang == 'he':
-			num += self._search_tokens(search_obj, self.he_tokens)
 		if not lang or lang == 'gr':
 			num += self._search_tokens(search_obj, self.gr_tokens)
+		if not lang or lang == 'he':
+			num += self._search_tokens(search_obj, self.he_tokens or [])
 		return num
 
 	def _search_tokens(self, search_obj, tokens):
@@ -338,5 +354,32 @@ _BOOKS = [
 	('Ketuvim', 'Ezra', 10, 403),
 	('Ketuvim', 'Nehemiah', 13, 413),
 	('Ketuvim', '1 Chronicles', 29, 338),
-	('Ketuvim', '2 Chronicles',36, 367),
+	('Ketuvim', '2 Chronicles', 36, 367),
+	('Gospels', 'Matthew', 28, 921),
+	('Gospels', 'Mark', 16, 957),
+	('Gospels', 'Luke', 24, 973),
+	('Gospels', 'John', 21, 997, 'Jhn'),
+	('History', 'Acts', 28, 1018),
+	('Pauline Epistles', 'Romans', 16, 1046),
+	('Pauline Epistles', '1 Corinthians', 16, 1062),
+	('Pauline Epistles', '2 Corinthians', 13, 1078),
+	('Pauline Epistles', 'Galatians', 6, 1091),
+	('Pauline Epistles', 'Ephesians', 6, 1097),
+	('Pauline Epistles', 'Philippians', 4, 1103, 'Phl'),
+	('Pauline Epistles', 'Colossians', 4, 1107),
+	('Pauline Epistles', '1 Thessalonians', 5, 1111),
+	('Pauline Epistles', '2 Thessalonians', 3, 1116),
+	('Pauline Epistles', '1 Timothy', 6, 1119),
+	('Pauline Epistles', '2 Timothy', 4, 1125),
+	('Pauline Epistles', 'Titus', 3, 1129),
+	('Pauline Epistles', 'Philemon', 1, 1132, 'Phm'),
+	('General Epistles', 'Hebrews', 13, 1133),
+	('General Epistles', 'James', 5, 1146, 'Jas'),
+	('General Epistles', '1 Peter', 5, 1151),
+	('General Epistles', '2 Peter', 3, 1156),
+	('General Epistles', '1 John', 5, 1159),
+	('General Epistles', '2 John', 1, 1164),
+	('General Epistles', '3 John', 1, 1165),
+	('General Epistles', 'Jude', 1, 1166),
+	('Apocalyptic', 'Revelation', 22, 1167),
 ]
