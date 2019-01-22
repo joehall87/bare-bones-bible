@@ -111,8 +111,6 @@ class Bible():
 					pretty_parts.append(self.get_book(part).name)
 			pretty = ', '.join(pretty_parts)
 			return ' & '.join(pretty.rsplit(', '))
-		else:
-			return 'the Tanakh'
 
 	def _iter_books(self, book_filter):
 		if book_filter:
@@ -291,6 +289,20 @@ class HeToken(object):
 		self.word_to_search = tlit
 		self.highlight = False
 
+	def to_display(self):
+		"""Nice html display."""
+		disp = _to_display('hebrew', self.word, self.tlit, self.strongs, self.highlight)
+		if self.word_space:
+			disp += """
+        <table class="mini-table">
+          <tr><td><p style="line-height: 140%">
+            <span class="hebrew">{word_space}</span>
+            <br>
+            <span class="translit" dir='ltr'>{tlit_space}</span>
+          </p></td></tr>
+        </table>""".format(word_space=self.word_space, tlit_space=self.tlit_space)
+		return disp
+
 
 class GrToken(object):
 	"""Token wrapper."""
@@ -301,6 +313,41 @@ class GrToken(object):
 		self.strongs = strongs
 		self.word_to_search = tlit
 		self.highlight = False
+
+	def to_display(self):
+		"""Nice html display."""
+		return _to_display('greek', self.word_no_vowels, self.tlit, self.strongs, self.highlight, lh='130%')
+
+
+def _to_display(lan, word, tlit, strongs, highlight, lh='140%'):
+	if strongs:
+		word_disp = (
+			'<a href="#" data-toggle="modal" data-target="#{strongs}">'
+			'<span {highlight}>{word}</span></a>'
+		).format(
+			strongs=strongs,
+			word=word,
+			highlight='class="highlight"' if highlight else '',
+		)
+	else:
+		word_disp = (
+			'<span {highlight}>{word}</span>'
+		).format(
+			word=word,
+			highlight='class="highlight"' if highlight else 'style="color:grey"',
+		)
+	tlit_disp = word_disp.replace(word, tlit)
+	return """<table class="mini-table">
+      <tr><td><p style="line-height: {lh}">
+        <span class="{lan}">
+          {word_disp}
+        </span>
+        <br>
+        <span class="translit" dir='ltr'>
+          {tlit_disp}
+        </span>
+      </p></td></tr>
+    </table>""".format(lan=lan, word_disp=word_disp, tlit_disp=tlit_disp, lh=lh)
 
 
 def _make_search_obj(search_str):

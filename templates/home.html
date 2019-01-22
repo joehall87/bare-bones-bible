@@ -9,6 +9,7 @@
   <link rel="stylesheet" type="text/css" href="static/style.css">
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700|David+Libre|GFS+Neohellenic" rel="stylesheet">
   <style>
+    /* Greek and Hebrew styling */
     .mini-table {
       display:inline-table;
       border-spacing: 0px 0px;
@@ -27,7 +28,7 @@
     }
     .translit {
       font-size: 70%;
-      font-style: italic;
+      /*font-style: italic;*/
     }
     .foo {
       background-color: #EEEEEE;
@@ -105,6 +106,43 @@
               <li><a class="dropdown-item" href=/book?name=Nehemiah>Nehemiah</a></li>
               <li><a class="dropdown-item" href=/book?name=1+Chronicles>1 Chronicles</a></li>
               <li><a class="dropdown-item" href=/book?name=2+Chronicles>2 Chronicles</a></li>
+              <li><div class="dropdown-divider"></div></li>
+              <li><h5 class="dropdown-header">Gospels</h5></li>
+              <li><a class="dropdown-item" href=/book?name=Matthew>Matthew</a></li>
+              <li><a class="dropdown-item" href=/book?name=Mark>Mark</a></li>
+              <li><a class="dropdown-item" href=/book?name=Luke>Luke</a></li>
+              <li><a class="dropdown-item" href=/book?name=John>John</a></li>
+              <li><div class="dropdown-divider"></div></li>
+              <li><h5 class="dropdown-header">History</h5></li>
+              <li><a class="dropdown-item" href=/book?name=Acts>Acts</a></li>
+              <li><div class="dropdown-divider"></div></li>
+              <li><h5 class="dropdown-header">Pauline Epistles</h5></li>
+              <li><a class="dropdown-item" href=/book?name=Romans>Romans</a></li>
+              <li><a class="dropdown-item" href=/book?name=1+Corinthians>1 Corinthians</a></li>
+              <li><a class="dropdown-item" href=/book?name=2+Corinthians>2 Corinthians</a></li>
+              <li><a class="dropdown-item" href=/book?name=Galatians>Galatians</a></li>
+              <li><a class="dropdown-item" href=/book?name=Ephesians>Ephesians</a></li>
+              <li><a class="dropdown-item" href=/book?name=Philippians>Philippians</a></li>
+              <li><a class="dropdown-item" href=/book?name=Colossians>Colossians</a></li>
+              <li><a class="dropdown-item" href=/book?name=1+Thessalonians>1 Thessalonians</a></li>
+              <li><a class="dropdown-item" href=/book?name=1+Thessalonians>2 Thessalonians</a></li>
+              <li><a class="dropdown-item" href=/book?name=1+Timothy>1 Timothy</a></li>
+              <li><a class="dropdown-item" href=/book?name=1+Timothy>2 Timothy</a></li>
+              <li><a class="dropdown-item" href=/book?name=Titus>Titus</a></li>
+              <li><a class="dropdown-item" href=/book?name=Philemon>Philemon</a></li>
+              <li><div class="dropdown-divider"></div></li>
+              <li><h5 class="dropdown-header">General Epistles</h5></li>
+              <li><a class="dropdown-item" href=/book?name=Hebrews>Hebrews</a></li>
+              <li><a class="dropdown-item" href=/book?name=James>James</a></li>
+              <li><a class="dropdown-item" href=/book?name=1+Peter>1 Peter</a></li>
+              <li><a class="dropdown-item" href=/book?name=2+Peter>2 Peter</a></li>
+              <li><a class="dropdown-item" href=/book?name=1+John>1 John</a></li>
+              <li><a class="dropdown-item" href=/book?name=2+John>2 John</a></li>
+              <li><a class="dropdown-item" href=/book?name=3+John>3 John</a></li>
+              <li><a class="dropdown-item" href=/book?name=Jude>Jude</a></li>
+              <li><div class="dropdown-divider"></div></li>
+              <li><h5 class="dropdown-header">Apocalyptic</h5></li>
+              <li><a class="dropdown-item" href=/book?name=Revelation>Revelation</a></li>
             </ul>
         </li>
       </ul>
@@ -233,64 +271,19 @@
         </p>
       </div>
     </div>
-    <div class="row">
+    <div class="row mt-3">
       <!-- Hebrew -->
       {% if verse.he_tokens %}
       <div class="col-lg-6 text-right pretty-link" dir='rtl'>
         {% for token in verse.he_tokens %}
-        <table class="mini-table">
-          <tr><td>
-            <span class="hebrew">
-              {% if token.strongs %}
-              <a href="#" data-toggle="modal" data-target="#{{ token.strongs }}"><span {% if token.highlight %}class="highlight"{% endif %}>{{ token.word }}</span></a>
-              {% else %}
-              <span {% if token.highlight %}class="highlight"{% else %}style="color:grey"{% endif %}>{{ token.word }}</span>
-              {% endif %}
-            </span>
-            <br>
-            <span class="translit" dir='ltr'>
-              {% if token.strongs %}
-              <a href="#" data-toggle="modal" data-target="#{{ token.strongs }}"><span {% if token.highlight %}class="highlight"{% endif %}>{{ token.tlit }}</span></a>
-              {% else %}
-              <span {% if token.highlight %}class="highlight"{% else %}style="color:grey"{% endif %}>{{ token.tlit }}</span>
-              {% endif %}
-            </span>
-          </td></tr>
-        </table>
-        {% if token.word_space %}
-        <table class="mini-table">
-          <tr><td>
-            <span class="hebrew">{{ token.word_space }}</span>
-            <br>
-            <span class="translit" dir='ltr'>{{ token.tlit_space }}</span>
-          </td></tr>
-        </table>
-        {% endif %}
+        {{ token.to_display() | safe }}
         {% endfor %}
       </div>
       {% endif %}
       <!-- Greek -->
       <div class="{% if verse.he_tokens %}col-lg-6{% else %}col-lg-12{% endif %} pretty-link">
         {% for token in verse.gr_tokens %}
-        <table class="mini-table">
-          <tr><td>
-            <span class="greek">
-              {% if token.strongs %}
-              <a href="#" data-toggle="modal" data-target="#{{ token.strongs }}"><span {% if token.highlight %}class="highlight"{% endif %}>{{ token.word_no_vowels }}</span></a>
-              {% else %}
-              <span {% if token.highlight %}class="highlight"{% else %}style="color:grey"{% endif %}>{{ token.word_no_vowels }}</span>
-              {% endif %}
-            </span>
-            <br>
-            <span class="translit" dir='ltr'>
-              {% if token.strongs %}
-              <a href="#" data-toggle="modal" data-target="#{{ token.strongs }}"><span {% if token.highlight %}class="highlight"{% endif %}>{{ token.tlit }}</span></a>
-              {% else %}
-              <span {% if token.highlight %}class="highlight"{% else %}style="color:grey"{% endif %}>{{ token.tlit }}</span>
-              {% endif %}
-            </span>
-          </td></tr>
-        </table>
+        {{ token.to_display() | safe }}
         {% endfor %}
       </div>
     </div>

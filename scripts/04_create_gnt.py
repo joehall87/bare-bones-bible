@@ -11,18 +11,13 @@ sys.path.append(ROOT_DIR)
 
 from b3.greek import Greek
 
-# Assumes you have git cloned "GreekResources" repo in a dir called openscriptures
-WORD_LOOKUP_PATH = os.path.join(os.path.dirname(ROOT_DIR), 'openscriptures', 'GreekResources', 'GreekWordList.js')
+
+WORD_LOOKUP_PATH = os.path.join(ROOT_DIR, 'resources', 'strongs', 'greek-to-strongs.json')
 
 
 def _load_word_lookup():
-    json_str = ''
     with open(WORD_LOOKUP_PATH, 'r') as f:
-        for line in f.readlines():
-            line = line.strip()
-            if line.startswith('"'):
-                json_str += line
-    return json.loads('{' + json_str + '}')
+        return json.load(f)
 
 
 GREEK = Greek()
@@ -132,8 +127,7 @@ def _parse_w_elem(elem):
         w = w.lower()
         ws = _strip_accents(w)
         tlit = GREEK.transliterate(ws)
-        strong = LOOKUP.get(ws, {}).get('strong', '')
-        strong = ('G' if strong else '') + strong
+        strong = LOOKUP.get(ws)
         return w, ws, tlit, strong
 
 
